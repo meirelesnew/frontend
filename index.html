@@ -1,21 +1,383 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tabuada Turbo - O Jogo</title>
-    <link rel="stylesheet" href="css/style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Google Analytics GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-531494859"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-531494859');
+</script>
+
+<!-- Google AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2757076714223993"
+     crossorigin="anonymous"></script>
+<meta name="description" content="Tabuada Turbo - O jogo de tabuada mais rápido do Brasil! Treine multiplicação com timer, ranking por tempo e dois níveis de dificuldade. Ideal para crianças e estudantes.">
+<meta name="keywords" content="tabuada, jogo de tabuada, aprender tabuada, tabuada online, multiplicação, matemática infantil, jogo matemática, tabuada para crianças, tabuada divertida, treinar tabuada">
+<meta name="author" content="Tabuada Turbo">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#ff6b35">
+<link rel="canonical" href="https://meirelesnew.github.io/tabuada-turbo/">
+
+<!-- Open Graph (WhatsApp, Facebook) -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://meirelesnew.github.io/tabuada-turbo/">
+<meta property="og:title" content="Tabuada Turbo ⚡ - Jogo de Tabuada com Ranking">
+<meta property="og:description" content="Aprenda a tabuada de forma divertida! Timer, ranking por tempo e dois níveis de dificuldade. Jogue grátis agora!">
+<meta property="og:image" content="https://meirelesnew.github.io/tabuada-turbo/og-image.png">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:site_name" content="Tabuada Turbo">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Tabuada Turbo ⚡ - Jogo de Tabuada com Ranking">
+<meta name="twitter:description" content="Aprenda a tabuada de forma divertida! Timer, ranking por tempo e dois níveis. Jogue grátis!">
+<meta name="twitter:image" content="https://meirelesnew.github.io/tabuada-turbo/og-image.png">
+
+<!-- Schema.org JSON-LD -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Tabuada Turbo",
+  "url": "https://meirelesnew.github.io/tabuada-turbo/",
+  "description": "Jogo educativo de tabuada com timer, ranking por tempo e dois níveis de dificuldade. Ideal para crianças do ensino fundamental.",
+  "applicationCategory": "EducationalApplication",
+  "operatingSystem": "Any",
+  "inLanguage": "pt-BR",
+  "isAccessibleForFree": true,
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "BRL"
+  },
+  "educationalLevel": "Ensino Fundamental",
+  "learningResourceType": "Jogo Educativo",
+  "teaches": "Tabuada de multiplicação do 1 ao 10",
+  "audience": {
+    "@type": "EducationalAudience",
+    "educationalRole": "student"
+  }
+}
+</script>
+<title>Tabuada Turbo ⚡ | Jogo de Tabuada Online com Ranking - Aprenda Multiplicação</title>
+<link href="https://fonts.googleapis.com/css2?family=Boogaloo&family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
-    <div id="game-container">
-        <h1>Tabuada Turbo 🏎️💨</h1>
-        <p>Prepare-se para acelerar nos estudos!</p>
-        <!-- Conteúdo do jogo será renderizado aqui -->
-    </div>
 
-    <!-- Ordem correta de scripts para carregar as dependências -->
-    <script src="js/config.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/app.js"></script>
+  <!-- ── TELA ENTRADA ──────────────────────────────────── -->
+  <div id="screen-entrada" class="screen active" role="main" aria-label="Entrada">
+    <div class="cadastro-card" style="max-width:400px;margin:0 auto;text-align:center">
+      <div class="logo-area">
+        <div class="logo-emoji">🏎️</div>
+        <h1 class="logo-title">Tabuada<span class="logo-turbo">Turbo</span></h1>
+        <p style="color:var(--muted);font-size:.95rem;margin-top:.5rem">O jogo de tabuada mais rápido do Brasil!</p>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:1.5rem;font-size:1.1rem"
+              onclick="AUTH.abrirModal('login')">
+        🔑 Entrar / Criar Conta
+      </button>
+      <button class="btn-ghost" style="width:100%;margin-top:.75rem"
+              onclick="entrarSemConta()">
+        Jogar sem conta →
+      </button>
+      <p style="font-size:.75rem;color:var(--muted);margin-top:1rem;opacity:.7">
+        Crie uma conta para aparecer no ranking global 🌎
+      </p>
+    </div>
+  </div>
+
+
+
+<!-- Skip navigation para leitores de tela -->
+<a href="#screen-cadastro" 
+   style="position:absolute;left:-9999px;top:0;z-index:9999;background:#ff6b35;color:#fff;padding:8px 16px;border-radius:4px;font-weight:700"
+   onfocus="this.style.left='0'"
+   onblur="this.style.left='-9999px'">
+  Pular para o conteúdo principal
+</a>
+
+<!-- ════════════════ TELA 1: CADASTRO ════════════════ -->
+<div id="screen-cadastro" class="screen" role="main" aria-label="Tela inicial do jogo">
+  <div id="ad-container-top" class="ad-container">Publicidade</div>
+  <h1 class="logo">TABUADA<br>TURBO ⚡</h1>
+  <p class="tagline">Quem é o mais rápido?</p>
+
+  <div class="card">
+    <h3 class="section-title">👤 Quem vai jogar?</h3>
+    <label class="field-label">Seu apelido</label>
+    <input type="text" id="inp-nome" placeholder="Ex: Lucas, Ana, Turma 3A…" maxlength="20" aria-label="Digite seu apelido" autocomplete="nickname">
+
+    <div style="margin-top:20px">
+      <label class="field-label">Escolha seu avatar</label>
+      <div class="avatar-grid" id="avatar-grid"></div>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" onclick="irParaMenu()">JOGAR ▶</button>
+
+  <button class="btn-ghost mt8" onclick="irParaRanking()">🏆 Ver Ranking</button>
+</div>
+
+<!-- ════════════════ TELA 2: MENU ════════════════ -->
+<div id="screen-menu" class="screen">
+  <div id="player-bar-menu" class="player-bar"></div>
+
+  <div class="high-score-bar" id="high-score-display" style="display:none">
+    🏆 Recorde: <span id="high-score-valor">--:--</span>
+  </div>
+  <h2 class="section-title" style="text-align:center; font-size:1.5rem">Escolha o Nível</h2>
+
+  <button class="btn-level" onclick="iniciarJogo(1)">
+    <span class="lv-icon">📊</span>
+    <div class="lv-info">
+      <span>Nível 1 — Clássico</span>
+      <small>Tabela em ordem crescente (1→10)</small>
+    </div>
+  </button>
+
+  <button class="btn-level" onclick="iniciarJogo(2)">
+    <span class="lv-icon">🎲</span>
+    <div class="lv-info">
+      <span>Nível 2 — Embaralhado</span>
+      <small>Eixo X e Y em ordem aleatória</small>
+    </div>
+  </button>
+
+  <button class="btn" style="background:linear-gradient(135deg,#ff3366,#ff6b35);color:#fff;box-shadow:0 4px 20px rgba(255,51,102,0.4);margin-top:16px" onclick="irParaBatalha()">⚔️ Modo Batalha</button>
+
+  <div style="margin-top: 12px">
+    <button class="btn-ghost" onclick="irParaRanking()">🏆 Ranking</button>
+  </div>
+  <div style="margin-top: 8px">
+    <button class="btn-ghost" onclick="trocarJogador()">🔄 Trocar jogador</button>
+  </div>
+</div>
+
+<!-- ════════════════ TELA 3: JOGO ════════════════ -->
+<div id="screen-jogo" class="screen" role="main" aria-label="Tela do jogo">
+  <div id="player-bar-jogo" class="player-bar"></div>
+
+  <!-- Timer -->
+  <div class="timer-wrap">
+    <div>
+      <div style="font-size:0.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px">Tempo</div>
+      <div class="timer-display" id="timer-display">00:00</div>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill" style="width:100%"></div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-chip green">
+      <div class="sv" id="stat-acertos">0</div>
+      <div class="sk">✅ Acertos</div>
+    </div>
+    <div class="stat-chip red">
+      <div class="sv" id="stat-erros">0</div>
+      <div class="sk">❌ Erros</div>
+    </div>
+    <div class="stat-chip yellow">
+      <div class="sv" id="stat-restam">100</div>
+      <div class="sk">⬜ Restam</div>
+    </div>
+  </div>
+
+  <!-- Pergunta atual -->
+  <div class="question-box" id="question-box">
+    <div class="question-text" id="question-text">—</div>
+    <div class="resposta-display" id="resposta-display">?</div>
+  </div>
+
+  <!-- Numpad FIXO — nunca some, nunca abre teclado nativo -->
+  <div class="numpad-fixo">
+    <div class="numpad">
+      <button class="nk" onclick="numpadPress('1')">1</button>
+      <button class="nk" onclick="numpadPress('2')">2</button>
+      <button class="nk" onclick="numpadPress('3')">3</button>
+      <button class="nk" onclick="numpadPress('4')">4</button>
+      <button class="nk" onclick="numpadPress('5')">5</button>
+      <button class="nk" onclick="numpadPress('6')">6</button>
+      <button class="nk" onclick="numpadPress('7')">7</button>
+      <button class="nk" onclick="numpadPress('8')">8</button>
+      <button class="nk" onclick="numpadPress('9')">9</button>
+      <button class="nk del" onclick="numpadPress('del')">⌫</button>
+      <button class="nk" onclick="numpadPress('0')">0</button>
+      <button class="nk ok-key" onclick="numpadPress('ok')">OK ✓</button>
+    </div>
+  </div>
+
+  <!-- Tabela -->
+  <div class="table-scroll">
+    <table class="mult-table" id="mult-table"></table>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-top:8px">
+    <button class="btn-ghost" style="flex:1" onclick="confirmarDesistir()">↩ Desistir</button>
+    <button class="btn-ghost" style="width:52px;flex-shrink:0" id="btn-musica" onclick="toggleMusica()" title="Música" aria-label="Ativar ou desativar música">🎵</button>
+  </div>
+</div>
+
+<!-- ════════════════ TELA 4: RESULTADO ════════════════ -->
+<div id="screen-resultado" class="screen">
+  <div class="result-hero" style="text-align:center; padding:16px 0">
+    <div id="result-trophy" style="font-size:5rem; display:inline-block">🏆</div>
+    <div id="result-banner"></div>
+    <div class="result-time" id="result-time">00:00</div>
+    <div class="result-label">TEMPO TOTAL</div>
+    <div class="result-acertos mt8" id="result-acertos"></div>
+    <div id="result-recorde-badge"></div>
+  </div>
+
+  <div class="card" id="result-rank-preview"></div>
+
+  <button class="btn btn-primary mt16" onclick="jogarNovamente()">🔁 Jogar de novo</button>
+  <button class="btn-ghost mt8" onclick="irParaRanking()">🏆 Ver Ranking completo</button>
+  <button class="btn-ghost mt8" onclick="irParaMenu()">◀ Menu</button>
+</div>
+
+<!-- ════════════════ TELA: BATALHA MENU ════════════════ -->
+<div id="screen-batalha" class="screen">
+  <div id="player-bar-batalha" class="player-bar"></div>
+  <h2 class="logo" style="font-size:2rem; margin-bottom:4px">⚔️ BATALHA</h2>
+  <p class="tagline">Desafie seus amigos!</p>
+
+  <div class="card">
+    <h3 class="section-title">🆕 Criar Nova Sala</h3>
+    <label class="field-label">Nível</label>
+    <div style="display:flex; gap:10px; margin-bottom:12px">
+      <button class="btn-level" style="flex:1; padding:12px" onclick="setBatalhaLevel(1)">
+        <span class="lv-icon">📊</span>
+        <div class="lv-info"><span>Nível 1</span><small>Crescente</small></div>
+      </button>
+      <button class="btn-level" style="flex:1; padding:12px" onclick="setBatalhaLevel(2)">
+        <span class="lv-icon">🎲</span>
+        <div class="lv-info"><span>Nível 2</span><small>Aleatório</small></div>
+      </button>
+    </div>
+    <div id="nivel-batalha-selecionado" style="text-align:center; color:var(--muted); font-size:0.8rem; margin-bottom:12px">Nenhum nível selecionado</div>
+    <button class="btn btn-primary" onclick="criarSala()">🚀 Criar Sala</button>
+  </div>
+
+  <div class="card">
+    <h3 class="section-title">🔑 Entrar em uma Sala</h3>
+    <label class="field-label">Código da sala</label>
+    <input type="text" id="inp-codigo-sala" placeholder="Ex: ABCDE-123" maxlength="9" aria-label="Código da sala de batalha"
+      style="text-transform:uppercase; letter-spacing:3px; font-size:1.2rem; text-align:center">
+    <button class="btn btn-primary mt8" onclick="entrarSala()">🎮 Entrar</button>
+  </div>
+
+  <button class="btn-ghost mt8" onclick="irParaMenu()">◀ Menu</button>
+</div>
+
+<!-- ════════════════ TELA: COUNTDOWN ════════════════ -->
+<div id="screen-countdown" class="screen">
+  <div class="countdown-numero" id="countdown-numero">3</div>
+  <div class="countdown-label" id="countdown-label">Prepara!</div>
+  <div class="countdown-jogadores" id="countdown-jogadores"></div>
+</div>
+
+<!-- ════════════════ TELA: SALA DE ESPERA ════════════════ -->
+<div id="screen-sala" class="screen">
+  <div style="text-align:center; padding:32px 0 16px">
+    <div style="font-size:3rem">⏳</div>
+    <div style="font-family:'Boogaloo',cursive; font-size:1.4rem; color:var(--accent2); margin:8px 0">Sala de Espera</div>
+    <div style="font-size:0.8rem; color:var(--muted)">Compartilhe o código com seu adversário</div>
+  </div>
+
+  <div class="card" style="text-align:center">
+    <div style="font-size:0.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px">Código da Sala</div>
+    <div id="codigo-sala-display" style="font-family:'Boogaloo',cursive; font-size:2.8rem; color:var(--accent); letter-spacing:6px">----</div>
+    <div style="display:flex; gap:10px; margin-top:10px">
+      <button class="btn-ghost" style="flex:1; padding:8px" onclick="copiarCodigo()">📋 Copiar</button>
+      <button class="btn-whatsapp" style="flex:1; padding:8px; font-size:0.85rem" onclick="compartilharWhatsApp()" aria-label="Compartilhar código da sala no WhatsApp">
+        <svg viewBox="0 0 24 24" role="img" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Enviar
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="section-title">👥 Jogadores na sala</h3>
+    <div id="lista-jogadores-sala"></div>
+    <div id="sala-status-msg" style="text-align:center; color:var(--muted); font-size:0.85rem; margin-top:8px">Aguardando adversário...</div>
+  </div>
+
+  <button id="btn-iniciar-batalha" class="btn btn-primary" style="display:none" onclick="iniciarBatalha()">⚔️ Iniciar Batalha!</button>
+  <button class="btn-ghost mt8" onclick="sairDaSala()">↩ Sair da sala</button>
+</div>
+
+<!-- ════════════════ TELA: AGUARDANDO ════════════════ -->
+<div id="screen-aguardando" class="screen" style="justify-content:center;align-items:center;text-align:center">
+  <div style="font-size:4rem;animation:trofeuPulse 1.5s ease-in-out infinite">⏳</div>
+  <div style="font-family:'Boogaloo',cursive;font-size:1.6rem;color:var(--accent2);margin:16px 0">
+    Você terminou!
+  </div>
+  <div style="color:var(--muted);font-size:0.9rem;margin-bottom:24px">
+    Aguardando adversário finalizar...
+  </div>
+  <div class="progress-bar" style="width:80%;max-width:300px;height:6px;margin:0 auto">
+    <div class="progress-fill" style="width:100%;animation:aguardandoPulse 2s ease-in-out infinite"></div>
+  </div>
+  <div id="aguardando-placar" style="margin-top:32px;width:100%;max-width:360px;padding:0 20px"></div>
+</div>
+
+<!-- ════════════════ TELA: RESULTADO BATALHA ════════════════ -->
+<div id="screen-resultado-batalha" class="screen">
+  <div style="text-align:center; padding:16px 0 8px">
+    <div id="batalha-trophy" style="font-size:6rem; display:inline-block; line-height:1">🏆</div>
+    <div id="batalha-resultado-titulo" style="font-family:'Boogaloo',cursive; font-size:2.2rem; margin:8px 0"></div>
+    <div id="batalha-banner"></div>
+    <div id="batalha-mensagem" style="color:var(--muted);font-size:0.9rem;margin:8px 0 4px;padding:0 20px;line-height:1.5"></div>
+  </div>
+  <div id="batalha-placar" style="padding:0 4px"></div>
+  <button class="btn btn-primary mt16" onclick="irParaBatalha()">⚔️ Jogar de novo</button>
+  <button class="btn-whatsapp mt8" onclick="compartilharResultadoWhatsApp()" aria-label="Compartilhar resultado no WhatsApp">
+    <svg viewBox="0 0 24 24" role="img" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    Compartilhar resultado
+  </button>
+  <button class="btn-ghost mt8" onclick="irParaRanking()">🏆 Ver Ranking</button>
+  <button class="btn-ghost mt8" onclick="irParaMenu()">◀ Menu</button>
+</div>
+
+<!-- ════════════════ TELA 5: RANKING ════════════════ -->
+<div id="screen-ranking" class="screen" role="main" aria-label="Ranking de jogadores">
+  <div class="rank-header">
+    <h2 class="rank-title">🏆 Ranking</h2>
+    <button class="btn-ghost" style="width:auto; padding:8px 14px; font-size:0.8rem" onclick="limparRanking()">🗑 Limpar</button>
+  </div>
+
+  <div class="rank-tabs">
+    <button class="rank-tab active" id="tab-n1" onclick="switchTab(1)">Nível 1 📊</button>
+    <button class="rank-tab" id="tab-n2" onclick="switchTab(2)">Nível 2 🎲</button>
+    <button class="rank-tab" id="tab-all" onclick="switchTab(0)">Geral 🌟</button>
+  </div>
+
+  <div id="rank-list"></div>
+
+  <button class="btn-ghost mt8" onclick="irParaMenu()">◀ Menu</button>
+</div>
+
+<!-- TOAST -->
+<div id="celebration-overlay"></div>
+<div id="feedback-overlay"></div>
+<div id="toast"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/ranking.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
