@@ -118,6 +118,17 @@
           <tbody></tbody>
         </table>
       </div>
+
+      <div class="section">
+        <h2>⚙️ Editar Admin</h2>
+        <div style="display: grid; gap: 12px; max-width: 400px;">
+          <input type="text" id="edit-nome" placeholder="Nome" style="padding: 12px; border-radius: 8px; background: #111; color: #fff; border: 1px solid #333;">
+          <input type="email" id="edit-email" placeholder="Email" style="padding: 12px; border-radius: 8px; background: #111; color: #fff; border: 1px solid #333;" readonly>
+          <input type="password" id="edit-senha" placeholder="Nova senha (ou vazio para manter)" style="padding: 12px; border-radius: 8px; background: #111; color: #fff; border: 1px solid #333;">
+          <button onclick="salvarAdmin()" style="padding: 12px; background: var(--accent); border: none; border-radius: 8px; color: #fff; cursor: pointer;">💾 Salvar Alterações</button>
+          <p id="edit-msg" style="text-align: center;"></p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -168,6 +179,14 @@
     async function showDashboard() {
       document.getElementById('login-screen').classList.add('hidden');
       document.getElementById('dashboard').classList.remove('hidden');
+      
+      // Carregar dados do admin logado
+      const resPerfil = await fetch(API_URL + '/auth/perfil', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const perfil = await resPerfil.json();
+      popularDadosAdmin(perfil.usuario);
+      
       await loadEstatisticas();
       await loadUsuarios();
       await loadRanking();
@@ -215,6 +234,42 @@
           <td>${r.acertos}</td>
         </tr>
       `).join('');
+    }
+
+    async function salvarAdmin() {
+      const nome = document.getElementById('edit-nome').value;
+      const senha = document.getElementById('edit-senha').value;
+      const msgEl = document.getElementById('edit-msg');
+      
+      const body = { nome };
+      if (senha) body.senha = senha;
+      
+      try {
+        const res = await fetch(API_URL + '/admin/usuarios/254132cd-0383-46e6-9328-b282b4d6b96f', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(body)
+        });
+        
+        if (res.ok) {
+          msgEl.textContent = '✅Salvo com sucesso!';
+          msgEl.style.color = 'var(--green)';
+        } else {
+          msgEl.textContent = '❌Erro ao salvar';
+          msgEl.style.color = 'var(--red)';
+        }
+      } catch (e) {
+        msgEl.textContent = '❌Erro de conexão';
+        msgEl.style.color = 'var(--red)';
+      }
+    }
+
+    function popularDadosAdmin(usuario) {
+      document.getElementById('edit-nome').value = usuario.nome;
+      document.getElementById('edit-email').value = usuario.email;
     }
   </script>
 </body>
