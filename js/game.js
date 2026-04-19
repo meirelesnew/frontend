@@ -124,19 +124,18 @@ function trocarJogador() {
 }
 
 function sairDaConta() {
-  if (typeof AUTH === 'undefined' || !AUTH.estaLogado()) {
+  if (typeof AUTH !== 'undefined') {
+    const user = AUTH.getUser();
+    const nome = user ? user.nome : 'sua conta';
+    if (AUTH.estaLogado()) {
+      if (!confirm(`Deseja sair de ${nome}?`)) return;
+      AUTH.logout();
+    } else {
+      mostrarTela('screen-entrada');
+    }
+  } else {
     mostrarTela('screen-entrada');
-    return;
   }
-  const user = AUTH.getUser();
-  const nome = user ? user.nome : 'sua conta';
-  if (!confirm(`Deseja sair de ${nome}?`)) return;
-  AUTH.logout();
-  // Limpar estado local
-  jogadorId = null;
-  jogador = { nome: '', avatar: '🦁' };
-  mostrarTela('screen-entrada');
-  if (typeof toast === 'function') toast('👋 Até logo!', 'ok');
 }
 
 function irParaRanking() {

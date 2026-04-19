@@ -32,8 +32,21 @@ const AUTH = (() => {
   function logout() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    
+    // Limpar estado global do jogo se existir
+    if (typeof jogador !== 'undefined') {
+      jogador.nome = '';
+      jogador.avatar = '🦁';
+      localStorage.removeItem('tt_jogador');
+      localStorage.removeItem('tt_jogador_id');
+      if (typeof jogadorId !== 'undefined') window.jogadorId = null;
+    }
+
     atualizarBotaoAuth();
     if (typeof toast === 'function') toast('👋 Até logo!', 'ok');
+    
+    // Redirecionar para tela inicial se estiver no jogo
+    if (typeof mostrarTela === 'function') mostrarTela('screen-entrada');
   }
 
   // ── API calls ──────────────────────────────────────────────
@@ -551,27 +564,27 @@ const AUTH = (() => {
     const tokenRed  = params.get("redefinir");
 
     if (tokenConf) {
-      // Preenche o campo e confirma automaticamente
       abrirModal("confirmar");
+      const okEl = document.getElementById('auth-ok-confirmar');
+      if (okEl) okEl.textContent = "Verificando token...";
+      
       setTimeout(async () => {
         const input = document.getElementById("conf-token");
         if (input) {
           input.value = tokenConf;
           await confirmarConta();
         }
-      }, 500);
-      // Limpar da URL sem recarregar
+      }, 800);
       window.history.replaceState({}, "", window.location.pathname);
     }
 
     if (tokenRed) {
-      // Abre painel de redefinição de senha
       abrirModal("recuperar");
       setTimeout(() => {
         mostrarAba("redefinir");
         const input = document.getElementById("red-token");
         if (input) input.value = tokenRed;
-      }, 400);
+      }, 600);
       window.history.replaceState({}, "", window.location.pathname);
     }
   }
