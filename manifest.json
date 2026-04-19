@@ -2,14 +2,14 @@
   "name": "Tabuada Turbo ⚡",
   "short_name": "TabuadaTurbo",
   "description": "O jogo de tabuada mais rápido do Brasil! Ranking global e modo batalha.",
-  "start_url": "/frontend/",
+  "start_url": "https://tabuadaturbo.com.br/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0f0e17",
   "theme_color": "#ff6b35",
   "categories": ["games", "education"],
   "lang": "pt-BR",
-  "scope": "/frontend/",
+  "scope": "https://tabuadaturbo.com.br/",
   "icons": [
     {
       "src": "https://meirelesnew.github.io/tabuada-turbo/icon-192.png",
