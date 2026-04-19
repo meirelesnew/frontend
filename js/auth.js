@@ -97,16 +97,7 @@ const AUTH = (() => {
             <span style="font-size:.75rem;color:var(--muted,#aaa)">ou</span>
             <hr style="flex:1;border:none;border-top:1px solid rgba(255,255,255,0.1)">
           </div>
-          <div id="g_id_onload"
-               data-client_id="501612922717-qku41fj547b4u7hlk18l95gfet7rar8r.apps.googleusercontent.com"
-               data-callback="handleGoogleCredential"
-               data-auto_prompt="false">
-          </div>
-          <div class="g_id_signin"
-               data-type="standard" data-shape="rectangular"
-               data-theme="outline" data-text="signin_with"
-               data-size="large" data-logo_alignment="left" data-width="100%">
-          </div>
+          <div id="google-btn-login"></div>
           <p class="auth-switch">Não tem conta? <a href="#" onclick="AUTH.mostrarAba('register');return false;">Crie agora</a></p>
           <p class="auth-switch"><a href="#" onclick="AUTH.mostrarAba('recuperar');return false;" style="color:var(--muted,#aaa);font-size:.8rem">Esqueci minha senha</a></p>
         </div>
@@ -136,6 +127,29 @@ const AUTH = (() => {
           <button class="btn btn-primary" id="btn-confirmar" onclick="AUTH.confirmarConta()">✅ Confirmar conta</button>
           <p class="auth-switch"><a href="#" onclick="AUTH.reenviarConfirmacao();return false;">Não recebi o e-mail — reenviar</a></p>
           <p class="auth-switch"><a href="#" onclick="AUTH.mostrarAba('login');return false;">← Voltar ao login</a></p>
+        </div>
+
+        <!-- Painel Redefinir Senha (chegou do link do email) -->
+        <div id="auth-panel-redefinir" class="auth-panel" style="display:none">
+          <p class="auth-subtitle">🔑 Crie uma nova senha para sua conta.</p>
+          <input type="hidden" id="red-token">
+          <div class="auth-field">
+            <label class="field-label">Nova senha (mín. 6 caracteres)</label>
+            <div style="position:relative">
+              <input type="password" id="red-nova" placeholder="••••••" style="padding-right:2.8rem">
+              <button type="button" onclick="AUTH.toggleSenha('red-nova',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--muted,#aaa)">👁</button>
+            </div>
+          </div>
+          <div class="auth-field">
+            <label class="field-label">Confirmar nova senha</label>
+            <div style="position:relative">
+              <input type="password" id="red-nova-confirm" placeholder="••••••" style="padding-right:2.8rem">
+              <button type="button" onclick="AUTH.toggleSenha('red-nova-confirm',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--muted,#aaa)">👁</button>
+            </div>
+          </div>
+          <p id="auth-error-redefinir" class="auth-error"></p>
+          <p id="auth-ok-redefinir" style="color:#00e5ff;font-size:.85rem;min-height:16px;margin:-8px 0 10px"></p>
+          <button class="btn btn-primary" id="btn-redefinir" onclick="AUTH.redefinirSenha()">🔑 Salvar nova senha</button>
         </div>
 
         <!-- Painel Registro -->
@@ -170,16 +184,45 @@ const AUTH = (() => {
             <span style="font-size:.75rem;color:var(--muted,#aaa)">ou registre com</span>
             <hr style="flex:1;border:none;border-top:1px solid rgba(255,255,255,0.1)">
           </div>
-          <div class="g_id_signin"
-               data-type="standard" data-shape="rectangular"
-               data-theme="outline" data-text="signup_with"
-               data-size="large" data-logo_alignment="left" data-width="100%">
-          </div>
+          <div id="google-btn-register"></div>
           <p class="auth-switch">Já tem conta? <a href="#" onclick="AUTH.mostrarAba('login');return false;">Entrar</a></p>
         </div>
       </div>
     `;
     document.body.appendChild(modal);
+
+    // Renderizar botão Google via API programática (funciona em innerHTML dinâmico)
+    if (window.google && window.google.accounts) {
+      window.google.accounts.id.initialize({
+        client_id: "501612922717-qku41fj547b4u7hlk18l95gfet7rar8r.apps.googleusercontent.com",
+        callback:  window.handleGoogleCredential
+      });
+      const renderBtn = (id, text) => {
+        const el = document.getElementById(id);
+        if (el) window.google.accounts.id.renderButton(el, {
+          type: "standard", shape: "rectangular", theme: "outline",
+          text, size: "large", logo_alignment: "left", width: el.offsetWidth || 300
+        });
+      };
+      renderBtn("google-btn-login",    "signin_with");
+      renderBtn("google-btn-register", "signup_with");
+    } else {
+      // GSI ainda não carregou — tentar novamente em 1s
+      setTimeout(() => {
+        if (!window.google?.accounts) return;
+        window.google.accounts.id.initialize({
+          client_id: "501612922717-qku41fj547b4u7hlk18l95gfet7rar8r.apps.googleusercontent.com",
+          callback: window.handleGoogleCredential
+        });
+        ["google-btn-login","google-btn-register"].forEach((id,i) => {
+          const el = document.getElementById(id);
+          if (el) window.google.accounts.id.renderButton(el, {
+            type:"standard", shape:"rectangular", theme:"outline",
+            text: i===0?"signin_with":"signup_with", size:"large", width:300
+          });
+        });
+      }, 1000);
+    }
 
     // Enter key shortcuts
     document.getElementById("login-senha").addEventListener("keydown", e => {
@@ -208,7 +251,7 @@ const AUTH = (() => {
   }
 
   function mostrarAba(aba) {
-    const paineis = ["login", "register", "recuperar", "confirmar"];
+    const paineis = ["login", "register", "recuperar", "confirmar", "redefinir"];
     paineis.forEach(p => {
       const el = document.getElementById(`auth-panel-${p}`);
       if (el) el.style.display = aba === p ? "" : "none";
@@ -490,11 +533,46 @@ const AUTH = (() => {
   // ── Init ───────────────────────────────────────────────────
   function init() {
     injetarCSS();
-    // Aguarda DOM pronto para atualizar botão
     if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", atualizarBotaoAuth);
+      document.addEventListener("DOMContentLoaded", () => {
+        atualizarBotaoAuth();
+        processarTokenURL();
+      });
     } else {
       atualizarBotaoAuth();
+      processarTokenURL();
+    }
+  }
+
+  // Detecta ?confirmar=TOKEN ou ?redefinir=TOKEN na URL e abre modal automaticamente
+  function processarTokenURL() {
+    const params = new URLSearchParams(window.location.search);
+    const tokenConf = params.get("confirmar");
+    const tokenRed  = params.get("redefinir");
+
+    if (tokenConf) {
+      // Preenche o campo e confirma automaticamente
+      abrirModal("confirmar");
+      setTimeout(async () => {
+        const input = document.getElementById("conf-token");
+        if (input) {
+          input.value = tokenConf;
+          await confirmarConta();
+        }
+      }, 500);
+      // Limpar da URL sem recarregar
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+
+    if (tokenRed) {
+      // Abre painel de redefinição de senha
+      abrirModal("recuperar");
+      setTimeout(() => {
+        mostrarAba("redefinir");
+        const input = document.getElementById("red-token");
+        if (input) input.value = tokenRed;
+      }, 400);
+      window.history.replaceState({}, "", window.location.pathname);
     }
   }
 
@@ -583,6 +661,34 @@ const AUTH = (() => {
     } catch (e) { if (errEl) errEl.textContent = "Erro ao reenviar."; }
   }
 
+  // ── Redefinir senha (chegou do link do email) ────────────────────────
+  async function redefinirSenha() {
+    const btn    = document.getElementById("btn-redefinir");
+    const token  = document.getElementById("red-token")?.value?.trim();
+    const nova   = document.getElementById("red-nova")?.value || "";
+    const conf   = document.getElementById("red-nova-confirm")?.value || "";
+    const errEl  = document.getElementById("auth-error-redefinir");
+    const okEl   = document.getElementById("auth-ok-redefinir");
+
+    errEl.textContent = ""; okEl.textContent = "";
+    if (!nova || nova.length < 6) { errEl.textContent = "Senha deve ter no mínimo 6 caracteres."; return; }
+    if (nova !== conf) { errEl.textContent = "As senhas não coincidem."; return; }
+
+    btn.disabled = true; btn.textContent = "Salvando...";
+    try {
+      const res  = await fetch(`${CONFIG.API_URL}/auth/redefinir-senha`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, nova_senha: nova })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      okEl.textContent = "Senha redefinida! Faça login.";
+      setTimeout(() => mostrarAba("login"), 2000);
+    } catch (e) {
+      errEl.textContent = e.message || "Token inválido. Solicite outro link.";
+    } finally { btn.disabled = false; btn.textContent = "🔑 Salvar nova senha"; }
+  }
+
   // ── Login via Google OAuth ─────────────────────────────────────────────────
   async function handleGoogleCredential(response) {
     try {
@@ -611,5 +717,5 @@ const AUTH = (() => {
   // Expõe globalmente para o callback do script GSI
   window.handleGoogleCredential = handleGoogleCredential;
 
-  return { getToken, getUser, estaLogado, logout, abrirModal, fecharModal, mostrarAba, fazerLogin, fazerRegistro, atualizarBotaoAuth, toggleSenha, handleGoogleCredential, solicitarRecuperacao, confirmarConta, reenviarConfirmacao };
+  return { getToken, getUser, estaLogado, logout, abrirModal, fecharModal, mostrarAba, fazerLogin, fazerRegistro, atualizarBotaoAuth, toggleSenha, handleGoogleCredential, solicitarRecuperacao, confirmarConta, reenviarConfirmacao, redefinirSenha };
 })();
