@@ -289,12 +289,27 @@ const AUTH = (() => {
     try {
       const data = await login(email, senha);
       salvarToken(data.token, data.usuario);
+      
+      const anonId = localStorage.getItem('tt_jogador_id');
+      data.usuario.jogador_id = data.usuario.id;
+      if (anonId && anonId.startsWith('anon_')) {
+        try {
+          await API.salvarJogador({
+            jogador_id: data.usuario.id,
+            source_jogador_id: anonId,
+            nome: data.usuario.nome,
+            avatar: data.usuario.avatar || '🦁'
+          });
+          localStorage.removeItem('tt_jogador_id');
+        } catch (e) {
+          console.warn('[MIGRAÇÃO] Erro ao migrar:', e.message);
+        }
+      }
+
       fecharModal();
       atualizarBotaoAuth();
       if (typeof toast === 'function') toast(`✅ Bem-vindo, ${data.usuario.nome}!`, 'ok');
-      // Navegar para o menu do jogo após login
       if (typeof irParaMenu === 'function') {
-        // Preencher jogador com dados da conta
         if (typeof jogador !== 'undefined') {
           jogador.nome   = data.usuario.nome;
           jogador.avatar = data.usuario.avatar || '🦁';
@@ -327,10 +342,26 @@ const AUTH = (() => {
     try {
       const data = await registrar(nome, email, senha);
       salvarToken(data.token, data.usuario);
+      
+      const anonId = localStorage.getItem('tt_jogador_id');
+      data.usuario.jogador_id = data.usuario.id;
+      if (anonId && anonId.startsWith('anon_')) {
+        try {
+          await API.salvarJogador({
+            jogador_id: data.usuario.id,
+            source_jogador_id: anonId,
+            nome: data.usuario.nome,
+            avatar: data.usuario.avatar || '🦁'
+          });
+          localStorage.removeItem('tt_jogador_id');
+        } catch (e) {
+          console.warn('[MIGRAÇÃO] Erro ao migrar:', e.message);
+        }
+      }
+
       fecharModal();
       atualizarBotaoAuth();
       if (typeof toast === 'function') toast(`🎉 Conta criada! Confirme seu e-mail.`, 'ok');
-      // Mostrar painel de confirmação de conta
       mostrarAba('confirmar');
       const okEl = document.getElementById('auth-ok-confirmar');
       if (okEl) okEl.textContent = `📬 Enviamos um e-mail para ${data.usuario.email}. Verifique sua caixa de entrada!`;

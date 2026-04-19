@@ -27,7 +27,7 @@ const API = {
     }
   },
 
-  // ── Salvar jogador (anônimo, legado) ───────────────────────
+  // ── Salvar jogador (progresso completo) ───────────────────
   salvarJogador: async (dados) => {
     try {
       const res = await fetch(`${CONFIG.API_URL}/jogador`, {
@@ -39,6 +39,18 @@ const API = {
       return res.json();
     } catch (error) {
       console.error("API Error (salvarJogador):", error);
+      throw error;
+    }
+  },
+
+  // ── Buscar progresso do jogador ────────────────────────────
+  getJogador: async (id) => {
+    try {
+      const res = await fetch(`${CONFIG.API_URL}/jogador/${id}`);
+      if (!res.ok) throw new Error(`Erro ao carregar jogador: ${res.statusText}`);
+      return res.json();
+    } catch (error) {
+      console.error("API Error (getJogador):", error);
       throw error;
     }
   },

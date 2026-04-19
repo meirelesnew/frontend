@@ -113,12 +113,43 @@ function exibirRecordeTela(nivel) {
   }
 }
 
-function finalizarComRecorde(nivel, tempo) {
+async function finalizarComRecorde(nivel, tempo) {
   const novoRecorde = salvarRecorde(nivel, tempo);
   if (novoRecorde) {
     mostrarFeedback('🏆 NOVO RECORDE! ' + formatarTempo(tempo), 'success');
   }
   exibirRecordeTela(nivel);
+  await sincronizarProgressoNuvem(nivel, tempo);
+}
+
+async function sincronizarProgressoNuvem(nivel, tempo) {
+  const jid = localStorage.getItem('tt_jogador_id');
+  if (!jid) return;
+  try {
+    const payload = {
+      jogador_id: jid,
+      nome: jogador?.nome || localStorage.getItem('tt_nome') || 'Jogador',
+      avatar: jogador?.avatar || localStorage.getItem('tt_avatar') || '🦁',
+      nivel: nivel,
+      recordes_tempo: tempo,
+      ultimo_jogo: {
+        nivel,
+        tempo,
+        data: new Date().toISOString()
+      }
+    };
+    await API.salvarJogador(payload);
+    console.log('[SYNC] Progresso salvo na nuvem');
+  } catch (e) {
+    console.warn('[SYNC] Erro ao sincronizar:', e.message);
+  }
+}
+    };
+    await API.salvarJogador(payload);
+    console.log('[SYNC] Progresso salvo na nuvem');
+  } catch (e) {
+    console.warn('[SYNC] Erro ao sincronizar:', e.message);
+  }
 }
 
 function limparDados() {

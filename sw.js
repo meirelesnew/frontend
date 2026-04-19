@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tabuada-turbo-v3';
+const CACHE_NAME = 'tabuada-turbo-v4';
 const ASSETS = [
   '/',
   '/index.html',
@@ -6,6 +6,7 @@ const ASSETS = [
   '/js/config.js',
   '/js/api.js',
   '/js/auth.js',
+  '/js/socket.js',
   '/js/game.js',
   '/js/ranking.js',
   '/js/app.js',
@@ -31,11 +32,11 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Nunca cachear chamadas à API do backend
-  if (url.hostname.includes('onrender.com')) return;
+  //Nunca cachear chamadas à API do backend
+  if (url.hostname.includes('onrender.com') || url.pathname.startsWith('/api'))) return;
   if (event.request.method !== 'GET') return;
 
-  // HTML: sempre buscar do servidor primeiro
+  // HTML: sempre buscar do servidor primeiro (para LCP)
   if (url.pathname === '/' || url.pathname.endsWith('.html')) {
     event.respondWith(
       fetch(event.request).catch(() => caches.match('/index.html'))
@@ -43,17 +44,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Assets estáticos: cache primeiro, rede como fallback
+  // Assets estáticos: cache primeiro, rede como fallback (melhor LCP)
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      const networked = fetch(event.request).then((response) => {
+      if (cached) return cached;
+      return fetch(event.request).then((response) => {
         if (response.ok) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         }
         return response;
-      }).catch(() => cached);
-      return cached || networked;
+      });
     })
   );
 });

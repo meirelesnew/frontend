@@ -6,7 +6,7 @@ const AVATARES = ['🦁','🐯','🐸','🦊','🐧','🦄','🐉','🤖','👾'
 let jogador = { nome: '', avatar: '🦁' };
 // jogadorId persistente — SEMPRE recuperar do localStorage para evitar duplicatas
 let jogadorId = localStorage.getItem('tt_jogador_id') || null;
-console.log('[INIT] jogadorId recuperado:', jogadorId ? jogadorId.substring(0,8)+'...' : 'novo jogador');
+console.log('[INIT] jogadorId recuperado:', getOuCriarJogadorId());
 let respostaAtual = '';
 let salaAtual = null;
 let pollingInterval = null;
@@ -23,21 +23,51 @@ let erros = 0;
 let jogoAtivo = false;
 let nivelAtualJogo = 1;
 
+function getOuCriarJogadorId() {
+  if (!jogadorId) {
+    jogadorId = 'anon_' + Date.now() + '_' + Math.random().toString(36).substring(2, 10);
+    localStorage.setItem('tt_jogador_id', jogadorId);
+  }
+  return jogadorId;
+}
 
 // ── Entrada sem conta (modo visitante) ────────────────────────────────────
-function entrarSemConta() {
-  // Tenta restaurar jogador do localStorage
+async function entrarSemConta() {
   const nomeSalvo   = localStorage.getItem('tt_nome')   || '';
   const avatarSalvo = localStorage.getItem('tt_avatar') || '🦁';
   if (nomeSalvo) {
     jogador.nome   = nomeSalvo;
     jogador.avatar = avatarSalvo;
-    jogadorId = localStorage.getItem('tt_jogador_id') || null;
+    getOuCriarJogadorId();
+    await sincronizarProgresso();
     mostrarTela('screen-menu');
     renderPlayerBar('menu');
     exibirRecordeTela(1);
   } else {
     mostrarTela('screen-cadastro');
+  }
+}
+
+async function sincronizarProgresso() {
+  const jid = getOuCriarJogadorId();
+  try {
+    const res = await fetch(`${CONFIG.API_URL}/jogador/${jid}`);
+    if (res.ok) {
+      const dados = await res.json();
+      if (dados.nome && dados.nome !== 'Jogador') {
+        jogador.nome = dados.nome;
+        jogador.avatar = dados.avatar || '🦁';
+        localStorage.setItem('tt_nome', dados.nome);
+        localStorage.setItem('tt_avatar', dados.avatar);
+        localStorage.setItem('tt_jogador', JSON.stringify(jogador));
+        if (dados.recordes) {
+          localStorage.setItem('tt_recorde_1', dados.recordes[1] || '');
+          localStorage.setItem('tt_recorde_2', dados.recordes[2] || '');
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[SYNC] Sem conexão para carregar progresso:', e.message);
   }
 }
 
@@ -99,17 +129,27 @@ function mostrarTela(id) {
 
 async function irParaMenu() {
   if (!validarCadastro()) return;
-  // Sincronizar com AUTH se usuário estiver logado
   if (typeof AUTH !== 'undefined' && AUTH.estaLogado()) {
     const u = AUTH.getUser();
     if (u) { jogador.nome = u.nome; jogador.avatar = u.avatar || jogador.avatar; }
   }
+  const rec1 = localStorage.getItem('tt_recorde_1');
+  const rec2 = localStorage.getItem('tt_recorde_2');
   try {
-    const d = await API.salvarJogador({ jogador_id: jogadorId || '', nome: jogador.nome, avatar: jogador.avatar });
-    // Sempre usa o ID retornado pela API (garante consistência)
-    jogadorId = d.jogador_id;
-    localStorage.setItem('tt_jogador_id', jogadorId);
-    console.log('[JOGADOR] ID confirmado:', jogadorId.substring(0,8)+'...');
+    const payload = { 
+      jogador_id: getOuCriarJogadorId(), 
+      nome: jogador.nome, 
+      avatar: jogador.avatar,
+      recordes: {}
+    };
+    if (rec1) payload.recordes[1] = parseInt(rec1);
+    if (rec2) payload.recordes[2] = parseInt(rec2);
+    const d = await API.salvarJogador(payload);
+    if (d.jogador_id) {
+      jogadorId = d.jogador_id;
+      localStorage.setItem('tt_jogador_id', jogadorId);
+    }
+    console.log('[JOGADOR] Sincronizado:', d);
   } catch(e) {
     console.warn('[API] offline — usando ID local:', e.message);
     if (!jogadorId) jogadorId = 'local_' + Date.now();
@@ -307,14 +347,13 @@ function atualizarHighlight(xi, yi) {
   celulas.forEach((c, i) => {
     if (c.correto !== null) return; // já respondida, não recolore
     const td = document.getElementById('cell-' + c.xi + '-' + c.yi);
-    if (!td) return;
-    const naCol = c.xi === xi;
-    const naRow = c.yi === yi;
-    if (naCol && naRow) return; // é a active-cell, já tem classe própria
-    if (naCol && naRow) td.classList.add('cross-highlight');
-    else if (naCol) td.classList.add('col-highlight');
-    else if (naRow) td.classList.add('row-highlight');
-  });
+if (!td) return;
+  const naCol = c.xi === xi;
+  const naRow = c.yi === yi;
+  if (naCol && naRow) return;
+  if (naCol) td.classList.add('col-highlight');
+  else if (naRow) td.classList.add('row-highlight');
+});
 }
 
 // ══════════════════════════════════════════
@@ -411,6 +450,10 @@ function atualizarStats() {
   document.getElementById('stat-restam').textContent = restam;
   const pct = ((100 - restam) / 100) * 100;
   document.getElementById('progress-fill').style.width = pct + '%';
+
+  if (modoAtual === 'batalha' && BATALHA.conectado) {
+    BATALHA.atualizarProgresso(segundos, acertos, erros);
+  }
 }
 
 function iniciarTimer() {
@@ -643,25 +686,34 @@ function setBatalhaLevel(lv) {
 async function criarSala() {
   if (!jogadorId) { toast('Volte ao menu e entre novamente', 'err'); return; }
   toast('Criando sala...', 'inf');
-  try {
-    const r = await fetch(CONFIG.API_URL + '/batalha/criar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jogador_id: jogadorId,
-        nome: jogador.nome,
-        avatar: jogador.avatar,
-        nivel: batalhaLevel
-      })
-    });
-    const d = await r.json();
-    if (!r.ok) { toast('Erro: ' + (d.detail || 'tente novamente'), 'err'); return; }
-    salaAtual = d;
-    document.getElementById('codigo-sala-display').textContent = d.codigo;
-    renderJogadoresSala([{ nome: jogador.nome, avatar: jogador.avatar, finalizado: false }]);
+  
+  BATALHA.on('onSalaCriada', (data) => {
+    salaAtual = { codigo: data.codigo, nivel: data.sala.nivel, criador: { id: jogadorId, nome: jogador.nome, avatar: jogador.avatar }, jogadores: [] };
+    document.getElementById('codigo-sala-display').textContent = data.codigo;
+    renderJogadoresSala([{ nome: jogador.nome, avatar: jogador.avatar, finalized: false }]);
     mostrarTela('screen-sala');
-    iniciarPolling(d.codigo);
-  } catch(e) { toast('Sem conexão com a API', 'err'); }
+  });
+
+  BATALHA.on('onJogadorEntrou', (data) => {
+    if (salaAtual) {
+      salaAtual.jogadores = salaAtual.jogadores || [];
+      salaAtual.jogadores.push({ nome: data.nome, avatar: data.avatar });
+      renderJogadoresSala([salaAtual.criador, ...salaAtual.jogadores]);
+    }
+  });
+
+  BATALHA.on('onBatalhaIniciada', (data) => {
+    iniciarJogoBatalha(data.nivel);
+  });
+
+  BATALHA.on('onAdversarioDesconectou', () => {
+    toast('Adversário desconectou!', 'err');
+    clearInterval(pollingInterval);
+    salaAtual = null;
+    irParaBatalha();
+  });
+  
+  BATALHA.criarSala(jogadorId, jogador.nome, jogador.avatar, batalhaLevel);
 }
 
 async function entrarSala() {
@@ -669,30 +721,36 @@ async function entrarSala() {
   if (codigo.length < 5) { toast('Digite o código da sala', 'err'); return; }
   if (!jogadorId) { toast('Volte ao menu e entre novamente', 'err'); return; }
   toast('Entrando na sala...', 'inf');
-  try {
-    const r = await fetch(CONFIG.API_URL + '/batalha/entrar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        codigo,
-        jogador_id: jogadorId,
-        nome: jogador.nome,
-        avatar: jogador.avatar
-      })
-    });
-    const d = await r.json();
-    if (!r.ok) { toast(d.detail || 'Sala não encontrada', 'err'); return; }
-    salaAtual = d;
-    batalhaLevel = d.nivel;
-    document.getElementById('codigo-sala-display').textContent = d.codigo;
-    renderJogadoresSala(d.jogadores);
+  
+  BATALHA.on('onSalaEncontrada', (data) => {
+    salaAtual = data.sala;
+    batalhaLevel = data.sala.nivel;
+    document.getElementById('codigo-sala-display').textContent = data.codigo;
+    const lista = [salaAtual.criador, ...(salaAtual.jogadores || [])];
+    renderJogadoresSala(lista);
     mostrarTela('screen-sala');
-    iniciarPolling(d.codigo);
-  } catch(e) { toast('Sem conexão com a API', 'err'); }
+  });
+
+  BATALHA.on('onBatalhaIniciada', (data) => {
+    iniciarJogoBatalha(data.nivel);
+  });
+
+  BATALHA.on('onAdversarioDesconectou', () => {
+    toast('Adversário desconectou!', 'err');
+    clearInterval(pollingInterval);
+    salaAtual = null;
+    irParaBatalha();
+  });
+  
+  BATALHA.entrarSala(codigo, jogadorId, jogador.nome, jogador.avatar);
 }
 
 function renderJogadoresSala(jogadores) {
   const el = document.getElementById('lista-jogadores-sala');
+  if (!jogadores || jogadores.length === 0) {
+    el.innerHTML = '<div style="text-align:center;color:var(--muted)">Nenhum jogador</div>';
+    return;
+  }
   el.innerHTML = jogadores.map(j => `
     <div style="display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.06)">
       <span style="font-size:1.6rem">${j.avatar || '🦁'}</span>
@@ -701,7 +759,6 @@ function renderJogadoresSala(jogadores) {
     </div>
   `).join('');
 
-  // Mostrar botão iniciar se 2+ jogadores e eu sou o criador
   const btnIniciar = document.getElementById('btn-iniciar-batalha');
   const msg = document.getElementById('sala-status-msg');
   if (jogadores.length >= 2) {
@@ -765,20 +822,12 @@ function iniciarPolling(codigo) {
 
 async function iniciarBatalha() {
   if (!salaAtual) return;
-  try {
-    const r = await fetch(CONFIG.API_URL + '/batalha/' + salaAtual.codigo + '/iniciar', {
-      method: 'POST'
-    });
-    const d = await r.json();
-    if (!r.ok) { toast(d.detail || 'Erro ao iniciar', 'err'); return; }
-    // Polling vai detectar status em_jogo e chamar iniciarJogoBatalha
-  } catch(e) { toast('Erro de conexão', 'err'); }
+  BATALHA.iniciarBatalha();
 }
 
 function iniciarJogoBatalha(nivel) {
   clearInterval(pollingInterval);
-  // Mostrar countdown antes de iniciar
-  const jogadoresSala = salaAtual ? salaAtual.jogadores : [];
+  const jogadoresSala = salaAtual ? [salaAtual.criador, ...(salaAtual.jogadores || [])] : [];
   mostrarCountdown(3, jogadoresSala, () => {
     modoAtual = 'batalha';
     iniciarJogo(nivel);
@@ -788,33 +837,26 @@ function iniciarJogoBatalha(nivel) {
 async function enviarResultadoBatalha() {
   if (!salaAtual || !jogadorId) return;
 
-  // Mostrar tela de aguardando imediatamente
   pararMusica();
   mostrarTela('screen-aguardando');
 
-  try {
-    const r = await fetch(CONFIG.API_URL + '/batalha/finalizar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        codigo: salaAtual.codigo,
-        jogador_id: jogadorId,
-        tempo: segundos,
-        acertos,
-        erros
-      })
-    });
-    const d = await r.json();
-    if (d.status === 'finalizada') {
-      setTimeout(() => mostrarResultadoBatalha(d.jogadores), 800);
-    } else {
-      // Aguardar adversário via polling
-      iniciarPolling(salaAtual.codigo);
+  BATALHA.finalizarBatalha(segundos, acertos, erros);
+
+  BATALHA.on('onJogadorFinalizou', (data) => {
+    const el = document.getElementById('aguardando-placar');
+    if (el) {
+      el.innerHTML = '<div style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Já finalizaram</div>' +
+        '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(255,255,255,0.04);border-radius:10px;margin-bottom:6px">' +
+        '<span>' + (jogador.avatar || '🦁') + '</span>' +
+        '<span style="flex:1;font-weight:700">' + data.nome + '</span>' +
+        '<span style="font-family:Boogaloo,cursive;color:var(--accent2)">' + formatarTempo(data.tempo) + '</span>' +
+        '</div>';
     }
-  } catch(e) {
-    toast('Erro de conexão', 'err');
-    iniciarPolling(salaAtual.codigo);
-  }
+  });
+
+  BATALHA.on('onBatalhaFinalizada', (data) => {
+    setTimeout(() => mostrarResultadoBatalha(data.resultados), 500);
+  });
 }
 
 function mostrarResultadoBatalha(jogadoresList) {
@@ -900,6 +942,8 @@ function copiarCodigo() {
 
 function sairDaSala() {
   clearInterval(pollingInterval);
+  BATALHA.sairSala();
+  BATALHA.disconnect();
   salaAtual = null;
   irParaBatalha();
 }
