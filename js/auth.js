@@ -108,6 +108,34 @@ const AUTH = (() => {
                data-size="large" data-logo_alignment="left" data-width="100%">
           </div>
           <p class="auth-switch">Não tem conta? <a href="#" onclick="AUTH.mostrarAba('register');return false;">Crie agora</a></p>
+          <p class="auth-switch"><a href="#" onclick="AUTH.mostrarAba('recuperar');return false;" style="color:var(--muted,#aaa);font-size:.8rem">Esqueci minha senha</a></p>
+        </div>
+
+        <!-- Painel Recuperação de Senha -->
+        <div id="auth-panel-recuperar" class="auth-panel" style="display:none">
+          <p class="auth-subtitle">🔑 Digite seu e-mail e enviaremos um link para redefinir sua senha.</p>
+          <div class="auth-field">
+            <label class="field-label">E-mail da conta</label>
+            <input type="email" id="rec-email" placeholder="seu@email.com" autocomplete="email">
+          </div>
+          <p id="auth-error-recuperar" class="auth-error"></p>
+          <p id="auth-ok-recuperar" style="color:#00e5ff;font-size:.85rem;min-height:16px;margin:-8px 0 10px"></p>
+          <button class="btn btn-primary" id="btn-recuperar" onclick="AUTH.solicitarRecuperacao()">📧 Enviar link</button>
+          <p class="auth-switch">Lembrou a senha? <a href="#" onclick="AUTH.mostrarAba('login');return false;">Voltar ao login</a></p>
+        </div>
+
+        <!-- Painel Confirmar Conta -->
+        <div id="auth-panel-confirmar" class="auth-panel" style="display:none">
+          <p class="auth-subtitle">📬 Verifique seu e-mail e cole o link de confirmação abaixo.</p>
+          <div class="auth-field">
+            <label class="field-label">Código / Token do e-mail</label>
+            <input type="text" id="conf-token" placeholder="Cole o token aqui...">
+          </div>
+          <p id="auth-error-confirmar" class="auth-error"></p>
+          <p id="auth-ok-confirmar" style="color:#00e5ff;font-size:.85rem;min-height:16px;margin:-8px 0 10px"></p>
+          <button class="btn btn-primary" id="btn-confirmar" onclick="AUTH.confirmarConta()">✅ Confirmar conta</button>
+          <p class="auth-switch"><a href="#" onclick="AUTH.reenviarConfirmacao();return false;">Não recebi o e-mail — reenviar</a></p>
+          <p class="auth-switch"><a href="#" onclick="AUTH.mostrarAba('login');return false;">← Voltar ao login</a></p>
         </div>
 
         <!-- Painel Registro -->
@@ -180,10 +208,14 @@ const AUTH = (() => {
   }
 
   function mostrarAba(aba) {
-    document.getElementById("auth-panel-login").style.display    = aba === "login" ? "" : "none";
-    document.getElementById("auth-panel-register").style.display = aba === "register" ? "" : "none";
+    const paineis = ["login", "register", "recuperar", "confirmar"];
+    paineis.forEach(p => {
+      const el = document.getElementById(`auth-panel-${p}`);
+      if (el) el.style.display = aba === p ? "" : "none";
+    });
     document.querySelectorAll(".auth-tab").forEach(t => t.classList.remove("active"));
-    document.getElementById(`tab-${aba}`).classList.add("active");
+    const tabEl = document.getElementById(`tab-${aba}`);
+    if (tabEl) tabEl.classList.add("active");
   }
 
   // ── Ações ──────────────────────────────────────────────────
@@ -241,15 +273,11 @@ const AUTH = (() => {
       salvarToken(data.token, data.usuario);
       fecharModal();
       atualizarBotaoAuth();
-      if (typeof toast === 'function') toast(`🎉 Olá, ${data.usuario.nome}!`, 'ok');
-      // Navegar para o menu do jogo após registro
-      if (typeof irParaMenu === 'function') {
-        if (typeof jogador !== 'undefined') {
-          jogador.nome   = data.usuario.nome;
-          jogador.avatar = data.usuario.avatar || '🦁';
-        }
-        setTimeout(() => irParaMenu(), 300);
-      }
+      if (typeof toast === 'function') toast(`🎉 Conta criada! Confirme seu e-mail.`, 'ok');
+      // Mostrar painel de confirmação de conta
+      mostrarAba('confirmar');
+      const okEl = document.getElementById('auth-ok-confirmar');
+      if (okEl) okEl.textContent = `📬 Enviamos um e-mail para ${data.usuario.email}. Verifique sua caixa de entrada!`;
     } catch (e) {
       errEl.textContent = e.message;
     } finally {
@@ -488,7 +516,74 @@ const AUTH = (() => {
   }
 
 
-  // ── Login via Google OAuth ─────────────────────────────────
+  // ── Recuperação de senha ──────────────────────────────────────────────
+  async function solicitarRecuperacao() {
+    const btn   = document.getElementById("btn-recuperar");
+    const email = document.getElementById("rec-email")?.value?.trim();
+    const errEl = document.getElementById("auth-error-recuperar");
+    const okEl  = document.getElementById("auth-ok-recuperar");
+    errEl.textContent = ""; okEl.textContent = "";
+    if (!email) { errEl.textContent = "Preencha o e-mail."; return; }
+    btn.disabled = true; btn.textContent = "Enviando...";
+    try {
+      const res  = await fetch(`${CONFIG.API_URL}/auth/recuperar-senha`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      okEl.textContent = data.message || "Verifique seu e-mail!";
+    } catch (e) {
+      errEl.textContent = "Erro ao enviar. Tente novamente.";
+    } finally { btn.disabled = false; btn.textContent = "📧 Enviar link"; }
+  }
+
+  // ── Confirmar conta ────────────────────────────────────────────────────
+  async function confirmarConta() {
+    const btn   = document.getElementById("btn-confirmar");
+    const token = document.getElementById("conf-token")?.value?.trim();
+    const errEl = document.getElementById("auth-error-confirmar");
+    const okEl  = document.getElementById("auth-ok-confirmar");
+    errEl.textContent = "";
+    if (!token) { errEl.textContent = "Cole o token do e-mail."; return; }
+    btn.disabled = true; btn.textContent = "Verificando...";
+    try {
+      const res  = await fetch(`${CONFIG.API_URL}/auth/confirmar`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      salvarToken(data.token, data.usuario);
+      atualizarBotaoAuth();
+      fecharModal();
+      if (typeof toast === "function") toast("✅ Conta confirmada! Bem-vindo!", "ok");
+      if (typeof jogador !== "undefined") {
+        jogador.nome   = data.usuario.nome;
+        jogador.avatar = data.usuario.avatar || "🦁";
+      }
+      if (typeof irParaMenu === "function") setTimeout(() => irParaMenu(), 300);
+    } catch (e) {
+      errEl.textContent = e.message || "Token inválido.";
+    } finally { btn.disabled = false; btn.textContent = "✅ Confirmar conta"; }
+  }
+
+  // ── Reenviar confirmação ───────────────────────────────────────────────
+  async function reenviarConfirmacao() {
+    const okEl  = document.getElementById("auth-ok-confirmar");
+    const errEl = document.getElementById("auth-error-confirmar");
+    const email = prompt("Digite seu e-mail para reenviar a confirmação:");
+    if (!email) return;
+    try {
+      const res  = await fetch(`${CONFIG.API_URL}/auth/reenviar-confirmacao`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (okEl) okEl.textContent = data.message || "E-mail reenviado!";
+    } catch (e) { if (errEl) errEl.textContent = "Erro ao reenviar."; }
+  }
+
+  // ── Login via Google OAuth ─────────────────────────────────────────────────
   async function handleGoogleCredential(response) {
     try {
       const res = await fetch(`${CONFIG.API_URL}/auth/google`, {
@@ -516,5 +611,5 @@ const AUTH = (() => {
   // Expõe globalmente para o callback do script GSI
   window.handleGoogleCredential = handleGoogleCredential;
 
-  return { getToken, getUser, estaLogado, logout, abrirModal, fecharModal, mostrarAba, fazerLogin, fazerRegistro, atualizarBotaoAuth, toggleSenha, handleGoogleCredential };
+  return { getToken, getUser, estaLogado, logout, abrirModal, fecharModal, mostrarAba, fazerLogin, fazerRegistro, atualizarBotaoAuth, toggleSenha, handleGoogleCredential, solicitarRecuperacao, confirmarConta, reenviarConfirmacao };
 })();
