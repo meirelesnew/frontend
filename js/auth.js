@@ -62,12 +62,14 @@ const AUTH = (() => {
   }
 
   async function login(email, senha) {
+    console.log('[AUTH] Tentando login:', email);
     const res = await fetch(`${CONFIG.API_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, senha })
     });
     const data = await res.json();
+    console.log('[AUTH] Resposta login:', res.status, data);
     if (!res.ok) throw new Error(data.message || "Email ou senha incorretos");
     return data;
   }
@@ -317,7 +319,9 @@ const AUTH = (() => {
         setTimeout(() => irParaMenu(), 300);
       }
     } catch (e) {
+      console.error('[AUTH] Erro login:', e.message);
       errEl.textContent = e.message;
+      if (typeof toast === 'function') toast('❌ ' + e.message, 'err');
     } finally {
       btn.disabled = false;
       btn.textContent = "🚀 Entrar";
