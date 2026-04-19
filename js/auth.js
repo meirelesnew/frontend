@@ -112,7 +112,7 @@ const AUTH = (() => {
             <span style="font-size:.75rem;color:var(--muted,#aaa)">ou</span>
             <hr style="flex:1;border:none;border-top:1px solid rgba(255,255,255,0.1)">
           </div>
-          <div id="google-btn-login"></div>
+          <!-- Login Google removido -->
           <p class="auth-switch">Não tem conta? <a href="#" onclick="AUTH.mostrarAba('register');return false;">Crie agora</a></p>
           <p class="auth-switch"><a href="#" onclick="AUTH.mostrarAba('recuperar');return false;" style="color:var(--muted,#aaa);font-size:.8rem">Esqueci minha senha</a></p>
         </div>
@@ -199,45 +199,14 @@ const AUTH = (() => {
             <span style="font-size:.75rem;color:var(--muted,#aaa)">ou registre com</span>
             <hr style="flex:1;border:none;border-top:1px solid rgba(255,255,255,0.1)">
           </div>
-          <div id="google-btn-register"></div>
+          <!-- Register Google removido -->
           <p class="auth-switch">Já tem conta? <a href="#" onclick="AUTH.mostrarAba('login');return false;">Entrar</a></p>
         </div>
       </div>
     `;
     document.body.appendChild(modal);
 
-    // Renderizar botão Google via API programática (funciona em innerHTML dinâmico)
-    if (window.google && window.google.accounts) {
-      window.google.accounts.id.initialize({
-        client_id: "501612922717-qku41fj547b4u7hlk18l95gfet7rar8r.apps.googleusercontent.com",
-        callback:  window.handleGoogleCredential
-      });
-      const renderBtn = (id, text) => {
-        const el = document.getElementById(id);
-        if (el) window.google.accounts.id.renderButton(el, {
-          type: "standard", shape: "rectangular", theme: "outline",
-          text, size: "large", logo_alignment: "left", width: el.offsetWidth || 300
-        });
-      };
-      renderBtn("google-btn-login",    "signin_with");
-      renderBtn("google-btn-register", "signup_with");
-    } else {
-      // GSI ainda não carregou — tentar novamente em 1s
-      setTimeout(() => {
-        if (!window.google?.accounts) return;
-        window.google.accounts.id.initialize({
-          client_id: "501612922717-qku41fj547b4u7hlk18l95gfet7rar8r.apps.googleusercontent.com",
-          callback: window.handleGoogleCredential
-        });
-        ["google-btn-login","google-btn-register"].forEach((id,i) => {
-          const el = document.getElementById(id);
-          if (el) window.google.accounts.id.renderButton(el, {
-            type:"standard", shape:"rectangular", theme:"outline",
-            text: i===0?"signin_with":"signup_with", size:"large", width:300
-          });
-        });
-      }, 1000);
-    }
+    // Google OAuth removido
 
     // Enter key shortcuts
     document.getElementById("login-senha").addEventListener("keydown", e => {
