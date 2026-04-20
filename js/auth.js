@@ -285,6 +285,12 @@ const AUTH = (() => {
           jogador.nome   = data.usuario.nome;
           jogador.avatar = data.usuario.avatar || '🦁';
         }
+        const inpNome = document.getElementById('inp-nome');
+        if (inpNome) inpNome.value = data.usuario.nome;
+        const avBtns = document.querySelectorAll('.av-btn');
+        avBtns.forEach(b => {
+          b.classList.toggle('selected', b.textContent === (data.usuario.avatar || '🦁'));
+        });
         setTimeout(() => irParaMenu(), 300);
       }
     } catch (e) {
@@ -656,6 +662,12 @@ const AUTH = (() => {
         jogador.nome   = data.usuario.nome;
         jogador.avatar = data.usuario.avatar || "🦁";
       }
+      const inpNome = document.getElementById("inp-nome");
+      if (inpNome) inpNome.value = data.usuario.nome;
+      const avBtns = document.querySelectorAll(".av-btn");
+      avBtns.forEach(b => {
+        b.classList.toggle("selected", b.textContent === (data.usuario.avatar || "🦁"));
+      });
       if (typeof irParaMenu === "function") setTimeout(() => irParaMenu(), 300);
     } catch (e) {
       errEl.textContent = e.message || "Token inválido.";
@@ -725,6 +737,12 @@ const AUTH = (() => {
         jogador.nome   = data.usuario.nome;
         jogador.avatar = data.usuario.avatar || "🦁";
       }
+      const inpNome = document.getElementById("inp-nome");
+      if (inpNome) inpNome.value = data.usuario.nome;
+      const avBtns = document.querySelectorAll(".av-btn");
+      avBtns.forEach(b => {
+        b.classList.toggle("selected", b.textContent === (data.usuario.avatar || "🦁"));
+      });
       if (typeof irParaMenu === "function") setTimeout(() => irParaMenu(), 300);
     } catch (err) {
       console.error("[GOOGLE] Erro:", err.message);
