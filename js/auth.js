@@ -107,12 +107,7 @@ const AUTH = (() => {
           </div>
           <p id="auth-error-login" class="auth-error"></p>
           <button class="btn btn-primary" id="btn-login" onclick="AUTH.fazerLogin()">🚀 Entrar</button>
-          <div style="display:flex;align-items:center;gap:8px;margin:12px 0">
-            <hr style="flex:1;border:none;border-top:1px solid rgba(255,255,255,0.1)">
-            <span style="font-size:.75rem;color:var(--muted,#aaa)">ou</span>
-            <hr style="flex:1;border:none;border-top:1px solid rgba(255,255,255,0.1)">
-          </div>
-          <!-- Login Google removido -->
+          
           <p class="auth-switch">Não tem conta? <a href="#" onclick="AUTH.mostrarAba('register');return false;">Crie agora</a></p>
           <p class="auth-switch"><a href="#" onclick="AUTH.mostrarAba('recuperar');return false;" style="color:var(--muted,#aaa);font-size:.8rem">Esqueci minha senha</a></p>
         </div>
@@ -194,20 +189,12 @@ const AUTH = (() => {
           </div>
           <p id="auth-error-register" class="auth-error"></p>
           <button class="btn btn-primary" id="btn-register" onclick="AUTH.fazerRegistro()">✨ Criar conta</button>
-          <div style="display:flex;align-items:center;gap:8px;margin:12px 0">
-            <hr style="flex:1;border:none;border-top:1px solid rgba(255,255,255,0.1)">
-            <span style="font-size:.75rem;color:var(--muted,#aaa)">ou registre com</span>
-            <hr style="flex:1;border:none;border-top:1px solid rgba(255,255,255,0.1)">
-          </div>
-          <!-- Register Google removido -->
+          
           <p class="auth-switch">Já tem conta? <a href="#" onclick="AUTH.mostrarAba('login');return false;">Entrar</a></p>
         </div>
       </div>
     `;
     document.body.appendChild(modal);
-
-    // Google OAuth removido
-
     // Enter key shortcuts
     document.getElementById("login-senha").addEventListener("keydown", e => {
       if (e.key === "Enter") AUTH.fazerLogin();
@@ -706,33 +693,5 @@ const AUTH = (() => {
     } finally { btn.disabled = false; btn.textContent = "🔑 Salvar nova senha"; }
   }
 
-  // ── Login via Google OAuth ─────────────────────────────────────────────────
-  async function handleGoogleCredential(response) {
-    try {
-      const res = await fetch(`${CONFIG.API_URL}/auth/google`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id_token: response.credential })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Erro no login Google");
-
-      salvarToken(data.token, data.usuario);
-      fecharModal();
-      atualizarBotaoAuth();
-      if (typeof toast === "function") toast(`✅ Bem-vindo, ${data.usuario.nome}!`, "ok");
-      if (typeof jogador !== "undefined") {
-        jogador.nome   = data.usuario.nome;
-        jogador.avatar = data.usuario.avatar || "🦁";
-      }
-      if (typeof irParaMenu === "function") setTimeout(() => irParaMenu(), 300);
-    } catch (err) {
-      console.error("[GOOGLE] Erro:", err.message);
-      if (typeof toast === "function") toast("❌ " + err.message, "err");
-    }
-  }
-  // Expõe globalmente para o callback do script GSI
-  window.handleGoogleCredential = handleGoogleCredential;
-
-  return { getToken, getUser, estaLogado, logout, abrirModal, fecharModal, mostrarAba, fazerLogin, fazerRegistro, atualizarBotaoAuth, toggleSenha, handleGoogleCredential, solicitarRecuperacao, confirmarConta, reenviarConfirmacao, redefinirSenha };
+  return { getToken, getUser, estaLogado, logout, abrirModal, fecharModal, mostrarAba, fazerLogin, fazerRegistro, atualizarBotaoAuth, toggleSenha, solicitarRecuperacao, confirmarConta, reenviarConfirmacao, redefinirSenha };
 })();
