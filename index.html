@@ -2,7 +2,22 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<!-- Desabilitar Google One Tap e FedCM (login automático pelo browser) -->
+<meta name="google" content="notranslate">
+<meta name="google-signin-client_id" content="">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Bloquear Google One Tap / FedCM -->
+<script>
+  // Impede o Google de mostrar popup de login automático
+  window.__googSignInOneTap = null;
+  if (window.google) { try { window.google.accounts.id.disableAutoSelect(); } catch(e){} }
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window.google && window.google.accounts) {
+      try { window.google.accounts.id.disableAutoSelect(); } catch(e){}
+    }
+  });
+</script>
 
 <!-- Google Analytics GA4 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-531494859"></script>
