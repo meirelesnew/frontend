@@ -128,11 +128,18 @@ function mostrarTela(id) {
 }
 
 async function irParaMenu() {
-  if (!validarCadastro()) return;
+  // Se logado via AUTH, preencher jogador e pular validarCadastro (campo vazio na tela de cadastro)
   if (typeof AUTH !== 'undefined' && AUTH.estaLogado()) {
     const u = AUTH.getUser();
-    if (u) { jogador.nome = u.nome; jogador.avatar = u.avatar || jogador.avatar; }
+    if (u) {
+      jogador.nome   = u.nome;
+      jogador.avatar = u.avatar || jogador.avatar || '🦁';
+      // Garantir que o campo inp-nome tenha o valor (validarCadastro verifica ele)
+      const inputNome = document.getElementById('inp-nome');
+      if (inputNome) inputNome.value = u.nome;
+    }
   }
+  if (!validarCadastro()) return;
   const rec1 = localStorage.getItem('tt_recorde_1');
   const rec2 = localStorage.getItem('tt_recorde_2');
   try {

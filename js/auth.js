@@ -107,12 +107,7 @@ const AUTH = (() => {
           </div>
           <p id="auth-error-login" class="auth-error"></p>
           <button class="btn btn-primary" id="btn-login" onclick="AUTH.fazerLogin()">🚀 Entrar</button>
-          <div style="display:flex;align-items:center;gap:8px;margin:12px 0">
-            <hr style="flex:1;border:none;border-top:1px solid rgba(255,255,255,0.1)">
-            <span style="font-size:.75rem;color:var(--muted,#aaa)">ou</span>
-            <hr style="flex:1;border:none;border-top:1px solid rgba(255,255,255,0.1)">
-          </div>
-          <!-- Login Google removido -->
+          
           <p class="auth-switch">Não tem conta? <a href="#" onclick="AUTH.mostrarAba('register');return false;">Crie agora</a></p>
           <p class="auth-switch"><a href="#" onclick="AUTH.mostrarAba('recuperar');return false;" style="color:var(--muted,#aaa);font-size:.8rem">Esqueci minha senha</a></p>
         </div>
@@ -194,20 +189,12 @@ const AUTH = (() => {
           </div>
           <p id="auth-error-register" class="auth-error"></p>
           <button class="btn btn-primary" id="btn-register" onclick="AUTH.fazerRegistro()">✨ Criar conta</button>
-          <div style="display:flex;align-items:center;gap:8px;margin:12px 0">
-            <hr style="flex:1;border:none;border-top:1px solid rgba(255,255,255,0.1)">
-            <span style="font-size:.75rem;color:var(--muted,#aaa)">ou registre com</span>
-            <hr style="flex:1;border:none;border-top:1px solid rgba(255,255,255,0.1)">
-          </div>
-          <!-- Register Google removido -->
+          
           <p class="auth-switch">Já tem conta? <a href="#" onclick="AUTH.mostrarAba('login');return false;">Entrar</a></p>
         </div>
       </div>
     `;
     document.body.appendChild(modal);
-
-    // Google OAuth removido
-
     // Enter key shortcuts
     document.getElementById("login-senha").addEventListener("keydown", e => {
       if (e.key === "Enter") AUTH.fazerLogin();
@@ -718,6 +705,7 @@ const AUTH = (() => {
     } finally { btn.disabled = false; btn.textContent = "🔑 Salvar nova senha"; }
   }
 
+<<<<<<< HEAD
   // ── Login via Google OAuth ─────────────────────────────────────────────────
   async function handleGoogleCredential(response) {
     try {
@@ -753,4 +741,7 @@ const AUTH = (() => {
   window.handleGoogleCredential = handleGoogleCredential;
 
   return { getToken, getUser, estaLogado, logout, abrirModal, fecharModal, mostrarAba, fazerLogin, fazerRegistro, atualizarBotaoAuth, toggleSenha, handleGoogleCredential, solicitarRecuperacao, confirmarConta, reenviarConfirmacao, redefinirSenha };
+=======
+  return { getToken, getUser, estaLogado, logout, abrirModal, fecharModal, mostrarAba, fazerLogin, fazerRegistro, atualizarBotaoAuth, toggleSenha, solicitarRecuperacao, confirmarConta, reenviarConfirmacao, redefinirSenha };
+>>>>>>> 29ba8c325c04098aa683ecf5a6f22316f2129cb2
 })();
