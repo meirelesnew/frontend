@@ -87,38 +87,10 @@
 </head>
 <body>
 
-  <!-- ── TELA ENTRADA ──────────────────────────────────── -->
-  <div id="screen-entrada" class="screen active" role="main" aria-label="Entrada">
-    <div class="cadastro-card" style="max-width:400px;margin:0 auto;text-align:center">
-      <div class="logo-area">
-        <div class="logo-emoji">🏎️</div>
-        <h1 class="logo-title">Tabuada<span class="logo-turbo">Turbo</span></h1>
-        <p style="color:var(--muted);font-size:.95rem;margin-top:.5rem">O jogo de tabuada mais rápido do Brasil!</p>
-      </div>
-      <button class="btn btn-primary" style="width:100%;margin-top:1.5rem;font-size:1.1rem"
-              onclick="AUTH.abrirModal('login')">
-        🔑 Entrar / Criar Conta
-      </button>
-      <button class="btn-ghost" style="width:100%;margin-top:.75rem"
-              onclick="entrarSemConta()">
-        Jogar sem conta →
-      </button>
-      <p style="font-size:.75rem;color:var(--muted);margin-top:1rem;opacity:.7">
-        Crie uma conta para aparecer no ranking global 🌎
-      </p>
-    </div>
-  </div>
 
-<!-- Skip navigation para leitores de tela -->
-<a href="#screen-cadastro" 
-   style="position:absolute;left:-9999px;top:0;z-index:9999;background:#ff6b35;color:#fff;padding:8px 16px;border-radius:4px;font-weight:700"
-   onfocus="this.style.left='0'"
-   onblur="this.style.left='-9999px'">
-  Pular para o conteúdo principal
-</a>
 
 <!-- ════════════════ TELA 1: CADASTRO ════════════════ -->
-<div id="screen-cadastro" class="screen" role="main" aria-label="Tela inicial do jogo">
+<div id="screen-cadastro" class="screen active" role="main" aria-label="Tela inicial do jogo">
   <div id="ad-container-top" class="ad-container">Publicidade</div>
   <h1 class="logo">TABUADA<br>TURBO ⚡</h1>
   <p class="tagline">Quem é o mais rápido?</p>
@@ -392,7 +364,6 @@
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script defer src="js/config.js"></script>
   <script defer src="js/api.js"></script>
-  <script defer src="js/auth.js"></script>
   <script defer src="js/socket.js"></script>
   <script defer src="js/game.js"></script>
   <script defer src="js/ranking.js"></script>

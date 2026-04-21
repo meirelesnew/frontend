@@ -144,13 +144,6 @@ async function sincronizarProgressoNuvem(nivel, tempo) {
     console.warn('[SYNC] Erro ao sincronizar:', e.message);
   }
 }
-    };
-    await API.salvarJogador(payload);
-    console.log('[SYNC] Progresso salvo na nuvem');
-  } catch (e) {
-    console.warn('[SYNC] Erro ao sincronizar:', e.message);
-  }
-}
 
 function limparDados() {
   Object.values(STORAGE_KEYS).forEach(k => localStorage.removeItem(k));

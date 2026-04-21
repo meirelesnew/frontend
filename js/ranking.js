@@ -15,8 +15,8 @@ function salvarRanking(entrada) {
   localStorage.setItem(key, JSON.stringify(rank.slice(0, 50)));
 
   // 2. Salvar na API — usa token JWT se logado via AUTH
-  const usuario = (typeof AUTH !== 'undefined' && AUTH.estaLogado()) ? AUTH.getUser() : null;
-  const jid = (usuario && usuario.id) || jogadorId || localStorage.getItem('tt_jogador_id') || 'anonimo';
+  const usuario = null; // sem autenticação
+  const jid = (typeof getOuCriarJogadorId === 'function') ? getOuCriarJogadorId() : (jogadorId || localStorage.getItem('tt_jogador_id') || 'anonimo');
 
   const payload = {
     jogador_id: jid,

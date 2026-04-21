@@ -32,20 +32,9 @@ function getOuCriarJogadorId() {
 }
 
 // ── Entrada sem conta (modo visitante) ────────────────────────────────────
-async function entrarSemConta() {
-  const nomeSalvo   = localStorage.getItem('tt_nome')   || '';
-  const avatarSalvo = localStorage.getItem('tt_avatar') || '🦁';
-  if (nomeSalvo) {
-    jogador.nome   = nomeSalvo;
-    jogador.avatar = avatarSalvo;
-    getOuCriarJogadorId();
-    try { await sincronizarProgresso(); } catch(e) { console.warn('[SYNC] Ignorado:', e.message); }
-    mostrarTela('screen-menu');
-    renderPlayerBar('menu');
-    exibirRecordeTela(1);
-  } else {
-    mostrarTela('screen-cadastro');
-  }
+// entrarSemConta — mantida por compatibilidade mas redireciona para cadastro
+function entrarSemConta() {
+  mostrarTela('screen-cadastro');
 }
 
 async function sincronizarProgresso() {
@@ -128,39 +117,25 @@ function mostrarTela(id) {
 }
 
 async function irParaMenu() {
-  // Se logado via AUTH, preencher jogador e pular validarCadastro
-  if (typeof AUTH !== 'undefined' && AUTH.estaLogado()) {
-    const u = AUTH.getUser();
-    if (u) {
-      jogador.nome   = u.nome;
-      jogador.avatar = u.avatar || jogador.avatar || '🦁';
-      localStorage.setItem('tt_jogador', JSON.stringify(jogador));
-    }
-  } else {
-    // Não logado via AUTH - precisa validar cadastro
-    if (!validarCadastro()) return;
-  }
+  if (!validarCadastro()) return;
 
-  // Feedback visual imediato — não esperar a API para navegar
+  // Navega imediatamente
   renderPlayerBar('menu');
   exibirRecordeTela(1);
   mostrarTela('screen-menu');
 
-  // Sincronizar com API em background (não bloqueia a navegação)
+  // Sync com API em background
   try {
-    const payload = { 
-      jogador_id: getOuCriarJogadorId(), 
-      nome: jogador.nome, 
+    const d = await API.salvarJogador({
+      jogador_id: getOuCriarJogadorId(),
+      nome: jogador.nome,
       avatar: jogador.avatar
-    };
-    const d = await API.salvarJogador(payload);
+    });
     if (d && d.jogador_id) {
       jogadorId = d.jogador_id;
       localStorage.setItem('tt_jogador_id', jogadorId);
     }
-    console.log('[JOGADOR] Sincronizado:', d);
   } catch(e) {
-    console.warn('[API] offline — usando ID local:', e.message);
     if (!jogadorId) jogadorId = 'local_' + Date.now();
   }
 }
@@ -170,18 +145,11 @@ function trocarJogador() {
 }
 
 function sairDaConta() {
-  if (typeof AUTH !== 'undefined') {
-    const user = AUTH.getUser();
-    const nome = user ? user.nome : 'sua conta';
-    if (AUTH.estaLogado()) {
-      if (!confirm(`Deseja sair de ${nome}?`)) return;
-      AUTH.logout();
-    } else {
-      mostrarTela('screen-entrada');
-    }
-  } else {
-    mostrarTela('screen-entrada');
-  }
+  jogador.nome = '';
+  jogador.avatar = '🦁';
+  localStorage.removeItem('tt_jogador');
+  localStorage.removeItem('tt_nome');
+  mostrarTela('screen-cadastro');
 }
 
 function irParaRanking() {

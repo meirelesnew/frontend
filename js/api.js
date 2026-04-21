@@ -13,12 +13,8 @@ const API = {
   },
 
   // ── Helper ─────────────────────────────────────────────────
-  _headers(comAuth = false) {
-    const h = { "Content-Type": "application/json" };
-    if (comAuth && typeof AUTH !== "undefined" && AUTH.estaLogado()) {
-      h["Authorization"] = `Bearer ${AUTH.getToken()}`;
-    }
-    return h;
+  _headers() {
+    return { "Content-Type": "application/json" };
   },
 
   // ── Ranking (público) ──────────────────────────────────────
@@ -66,10 +62,9 @@ const API = {
   // ── Salvar resultado (usa auth se disponível) ──────────────
   salvarRanking: async (dados) => {
     try {
-      const comAuth = typeof AUTH !== "undefined" && AUTH.estaLogado();
       const res = await API._fetch(`${CONFIG.API_URL}/ranking/salvar`, {
         method: "POST",
-        headers: API._headers(comAuth),
+        headers: API._headers(),
         body: JSON.stringify(dados)
       });
       if (!res.ok) {
