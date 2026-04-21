@@ -140,6 +140,13 @@ async function irParaMenu() {
     // Não logado via AUTH - precisa validar cadastro
     if (!validarCadastro()) return;
   }
+
+  // Feedback visual imediato — não esperar a API para navegar
+  renderPlayerBar('menu');
+  exibirRecordeTela(1);
+  mostrarTela('screen-menu');
+
+  // Sincronizar com API em background (não bloqueia a navegação)
   try {
     const payload = { 
       jogador_id: getOuCriarJogadorId(), 
@@ -147,7 +154,7 @@ async function irParaMenu() {
       avatar: jogador.avatar
     };
     const d = await API.salvarJogador(payload);
-    if (d.jogador_id) {
+    if (d && d.jogador_id) {
       jogadorId = d.jogador_id;
       localStorage.setItem('tt_jogador_id', jogadorId);
     }
@@ -156,9 +163,6 @@ async function irParaMenu() {
     console.warn('[API] offline — usando ID local:', e.message);
     if (!jogadorId) jogadorId = 'local_' + Date.now();
   }
-  renderPlayerBar('menu');
-  exibirRecordeTela(1);
-  mostrarTela('screen-menu');
 }
 
 function trocarJogador() {

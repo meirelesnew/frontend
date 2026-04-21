@@ -10,7 +10,9 @@ const BATALHA = {
 
   init() {
     if (this.socket) return;
-    this.socket = io(CONFIG.API_URL, {
+    // Socket.io deve conectar na raiz do servidor, não em /api
+    const socketURL = CONFIG.API_URL.replace(/\/api$/, "");
+    this.socket = io(socketURL, {
       transports: ["websocket", "polling"],
       reconnection: true,
       reconnectionAttempts: 3,

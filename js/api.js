@@ -4,6 +4,14 @@
 // ═══════════════════════════════════════════════════════════════
 
 const API = {
+  // ── Timeout helper — evita travar no cold start do Render ──
+  _fetch(url, opts = {}, timeoutMs = 8000) {
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), timeoutMs);
+    return fetch(url, { ...opts, signal: controller.signal })
+      .finally(() => clearTimeout(tid));
+  },
+
   // ── Helper ─────────────────────────────────────────────────
   _headers(comAuth = false) {
     const h = { "Content-Type": "application/json" };
@@ -16,7 +24,7 @@ const API = {
   // ── Ranking (público) ──────────────────────────────────────
   getRanking: async (nivel = 0, modo = "todos", limite = 50) => {
     try {
-      const res = await fetch(
+      const res = await API._fetch(
         `${CONFIG.API_URL}/ranking/global?nivel=${nivel}&modo=${modo}&limite=${limite}`
       );
       if (!res.ok) throw new Error(`Erro ao carregar ranking: ${res.statusText}`);
@@ -30,7 +38,7 @@ const API = {
   // ── Salvar jogador (progresso completo) ───────────────────
   salvarJogador: async (dados) => {
     try {
-      const res = await fetch(`${CONFIG.API_URL}/jogador`, {
+      const res = await API._fetch(`${CONFIG.API_URL}/jogador`, {
         method: "POST",
         headers: API._headers(),
         body: JSON.stringify(dados)
@@ -59,7 +67,7 @@ const API = {
   salvarRanking: async (dados) => {
     try {
       const comAuth = typeof AUTH !== "undefined" && AUTH.estaLogado();
-      const res = await fetch(`${CONFIG.API_URL}/ranking/salvar`, {
+      const res = await API._fetch(`${CONFIG.API_URL}/ranking/salvar`, {
         method: "POST",
         headers: API._headers(comAuth),
         body: JSON.stringify(dados)
