@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tabuada-turbo-v4';
+const CACHE_NAME = 'tabuada-turbo-v5';
 const ASSETS = [
   '/',
   '/index.html',
@@ -33,7 +33,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
   //Nunca cachear chamadas à API do backend
-  if (url.hostname.includes('onrender.com') || url.pathname.startsWith('/api'))) return;
+  if (url.hostname.includes('onrender.com') || url.pathname.startsWith('/api')) return;
   if (event.request.method !== 'GET') return;
 
   // HTML: sempre buscar do servidor primeiro (para LCP)
