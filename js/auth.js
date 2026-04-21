@@ -327,10 +327,18 @@ const AUTH = (() => {
 
       fecharModal();
       atualizarBotaoAuth();
-      if (typeof toast === 'function') toast(`🎉 Conta criada! Confirme seu e-mail.`, 'ok');
-      mostrarAba('confirmar');
-      const okEl = document.getElementById('auth-ok-confirmar');
-      if (okEl) okEl.textContent = `📬 Enviamos um e-mail para ${data.usuario.email}. Verifique sua caixa de entrada!`;
+      if (typeof toast === 'function') toast(`🎉 Bem-vindo, ${data.usuario.nome}! Conta criada!`, 'ok');
+      // Conta já confirmada automaticamente no backend (confirmado: true)
+      // Ir direto para o jogo após o registro
+      if (typeof irParaMenu === 'function') {
+        if (typeof jogador !== 'undefined') {
+          jogador.nome   = data.usuario.nome;
+          jogador.avatar = data.usuario.avatar || '🦁';
+        }
+        const inpNome = document.getElementById('inp-nome');
+        if (inpNome) inpNome.value = data.usuario.nome;
+        setTimeout(() => irParaMenu(), 300);
+      }
     } catch (e) {
       errEl.textContent = e.message;
     } finally {

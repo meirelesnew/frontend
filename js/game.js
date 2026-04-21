@@ -39,7 +39,7 @@ async function entrarSemConta() {
     jogador.nome   = nomeSalvo;
     jogador.avatar = avatarSalvo;
     getOuCriarJogadorId();
-    await sincronizarProgresso();
+    try { await sincronizarProgresso(); } catch(e) { console.warn('[SYNC] Ignorado:', e.message); }
     mostrarTela('screen-menu');
     renderPlayerBar('menu');
     exibirRecordeTela(1);
@@ -140,17 +140,12 @@ async function irParaMenu() {
     // Não logado via AUTH - precisa validar cadastro
     if (!validarCadastro()) return;
   }
-  const rec1 = localStorage.getItem('tt_recorde_1');
-  const rec2 = localStorage.getItem('tt_recorde_2');
   try {
     const payload = { 
       jogador_id: getOuCriarJogadorId(), 
       nome: jogador.nome, 
-      avatar: jogador.avatar,
-      recordes: {}
+      avatar: jogador.avatar
     };
-    if (rec1) payload.recordes[1] = parseInt(rec1);
-    if (rec2) payload.recordes[2] = parseInt(rec2);
     const d = await API.salvarJogador(payload);
     if (d.jogador_id) {
       jogadorId = d.jogador_id;
