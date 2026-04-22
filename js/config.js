@@ -1,3 +1,11 @@
+// ══════════════════════════════════
+//  CONFIG — troque a URL aqui
+// ══════════════════════════════════
 const CONFIG = {
-  API_URL: "https://backend-nept.onrender.com/api"
+  // Produção → Render
+  API_URL: "https://backend-nept.onrender.com/api",
+
+  // Dev local → descomente abaixo:
+  // API_URL: "http://localhost:3001/api",
 };
+window.CONFIG = CONFIG;
