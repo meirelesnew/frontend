@@ -1685,7 +1685,7 @@ function salvarRanking(entrada) {
 async function salvarRankingComRetry(payload, tentativas) {
   for (let i = 1; i <= tentativas; i++) {
     try {
-      const r = await fetch(API_URL + '/api/ranking', {
+      const r = await fetch(API_URL + '/api/ranking/salvar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -1722,7 +1722,7 @@ async function processarFilaPendentes() {
   const enviados = [];
   for (const item of fila) {
     try {
-      const r = await fetch(API_URL + '/api/ranking', {
+      const r = await fetch(API_URL + '/api/ranking/salvar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(item.payload),
@@ -1752,9 +1752,9 @@ function renderRankList(lv) {
   el.innerHTML = '<div class="rank-empty" style="color:var(--accent3)">🌐 Carregando ranking global... ⏳</div>';
 
   // Endpoint da nova API (backend-nept.onrender.com)
-  let endpoint = '/api/ranking';
-  if (lv === 1) endpoint = '/api/ranking?nivel=1';
-  else if (lv === 2) endpoint = '/api/ranking?nivel=2';
+  let endpoint = '/api/ranking/global';
+  if (lv === 1) endpoint = '/api/ranking/global?nivel=1';
+  else if (lv === 2) endpoint = '/api/ranking/global?nivel=2';
 
   fetch(API_URL + endpoint, { signal: AbortSignal.timeout(20000) })
     .then(r => {
