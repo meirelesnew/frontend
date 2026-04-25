@@ -1749,38 +1749,40 @@ function switchTab(lv) {
 
 function renderRankList(lv) {
   const el = document.getElementById('rank-list');
-  el.innerHTML = '<div class="rank-empty" style="color:var(--accent3)">🌐 Carregando ranking global... ⏳</div>';
 
-  // Endpoint da nova API (backend-nept.onrender.com)
+  // Mostrar dados locais IMEDIATAMENTE — nunca tela vazia
+  renderRankLocal(lv);
+
+  // Tentar buscar global em paralelo (timeout 8s)
   let endpoint = '/api/ranking/global';
   if (lv === 1) endpoint = '/api/ranking/global?nivel=1';
   else if (lv === 2) endpoint = '/api/ranking/global?nivel=2';
 
-  fetch(API_URL + endpoint, { signal: AbortSignal.timeout(20000) })
-    .then(r => {
-      if (!r.ok) throw new Error('API status ' + r.status);
-      return r.json();
-    })
+  let settled = false;
+  const timer = setTimeout(() => {
+    if (settled) return;
+    settled = true;
+    // Timeout — mantém o local que já está visível
+    console.warn('[RANKING] Timeout — mantendo dados locais');
+  }, 8000);
+
+  fetch(API_URL + endpoint, { signal: AbortSignal.timeout(8000) })
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(d => {
-      if (d.ranking && d.ranking.length > 0) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      if (d.ranking && d.ranking.length > 0 && !d.offline) {
         renderRankItems(d.ranking.slice(0, 50), lv);
-        // Processar fila pendente sempre que ranking carregar
         processarFilaPendentes();
-      } else {
-        el.innerHTML = '<div class="rank-empty">Nenhuma partida registrada ainda.<br>🚀 Seja o primeiro!</div>';
       }
+      // Se offline:true ou vazio — mantém o local já exibido
     })
     .catch(err => {
-      console.error('[RANKING] ERRO ao buscar ranking global:', err);
-      el.innerHTML =
-        '<div style="text-align:center;padding:24px 16px">' +
-          '<div style="font-size:2rem;margin-bottom:8px">⏳</div>' +
-          '<div style="color:var(--accent2);font-family:Boogaloo,cursive;font-size:1.1rem;margin-bottom:6px">Servidor acordando...</div>' +
-          '<div style="color:var(--muted);font-size:0.8rem;margin-bottom:16px">O servidor demora ~30s para acordar.<br>Os dados globais aparecem logo!</div>' +
-          '<button onclick="renderRankList(' + lv + ')" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:0.85rem;cursor:pointer">🔄 Tentar novamente</button>' +
-        '</div>';
-      // Tentar novamente automaticamente em 15s
-      setTimeout(() => renderRankList(lv), 15000);
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      console.warn('[RANKING] API indisponível — dados locais ativos');
     });
 }
 
