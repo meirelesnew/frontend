@@ -1583,9 +1583,10 @@ function finalizarJogo() {
     data: new Date().toLocaleDateString('pt-BR')
   };
 
-  // Modo batalha — envia resultado para a API e espera adversário
+  // Modo batalha — envia resultado via socket.io
   if (modoAtual === 'batalha' && salaAtual) {
-    enviarResultadoBatalha();
+    if (_sock) _sock.emit('finalizar_batalha', { tempo: segundos, acertos, erros });
+    mostrarTela('screen-aguardando');
     return;
   }
 
@@ -1980,55 +1981,110 @@ function setBatalhaLevel(lv) {
   });
 }
 
-async function criarSala() {
-  if (!jogadorId) { toast('Volte ao menu e entre novamente', 'err'); return; }
-  toast('Criando sala...', 'inf');
-  try {
-    const r = await fetch(API_URL + '/api/batalha/criar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jogador_id: jogadorId,
-        nome: jogador.nome,
-        avatar: jogador.avatar,
-        nivel: batalhaLevel
-      })
-    });
-    const d = await r.json();
-    if (!r.ok) { toast('Erro: ' + (d.detail || 'tente novamente'), 'err'); return; }
-    salaAtual = d;
-    document.getElementById('codigo-sala-display').textContent = d.codigo;
-    renderJogadoresSala([{ nome: jogador.nome, avatar: jogador.avatar, finalizado: false }]);
-    mostrarTela('screen-sala');
-    iniciarPolling(d.codigo);
-  } catch(e) { toast('Sem conexão com a API', 'err'); }
+// ── BATALHA via Socket.io ─────────────────────────────────
+let _sock = null;
+
+function getOrCreateSocket(cb) {
+  if (_sock && _sock.connected) { cb(_sock); return; }
+  const baseUrl = API_URL.replace('/api', '');
+  // Carregar socket.io CDN dinamicamente
+  if (typeof io === 'undefined') {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.socket.io/4.7.5/socket.io.min.js';
+    s.onload = () => { _sock = io(baseUrl, { transports: ['websocket','polling'] }); bindSocketEvents(); cb(_sock); };
+    s.onerror = () => toast('Erro ao carregar socket.io', 'err');
+    document.head.appendChild(s);
+  } else {
+    _sock = io(baseUrl, { transports: ['websocket','polling'] });
+    bindSocketEvents();
+    cb(_sock);
+  }
 }
 
-async function entrarSala() {
+function bindSocketEvents() {
+  if (!_sock) return;
+  _sock.off(); // limpar listeners antigos
+
+  _sock.on('sala_criada', ({ codigo, sala }) => {
+    salaAtual = { ...sala, codigo };
+    batalhaLevel = sala.nivel;
+    document.getElementById('codigo-sala-display').textContent = codigo;
+    renderJogadoresSala([{ nome: jogador.nome, avatar: jogador.avatar }]);
+    mostrarTela('screen-sala');
+    toast('Sala criada! Código: ' + codigo, 'ok');
+  });
+
+  _sock.on('sala_encontrada', ({ codigo, sala }) => {
+    salaAtual = { ...sala, codigo };
+    batalhaLevel = sala.nivel;
+    document.getElementById('codigo-sala-display').textContent = codigo;
+    const todos = [sala.criador, ...sala.jogadores];
+    renderJogadoresSala(todos);
+    mostrarTela('screen-sala');
+    toast('Entrou na sala ' + codigo + '!', 'ok');
+  });
+
+  _sock.on('jogador_entrou', ({ nome, avatar }) => {
+    toast(nome + ' entrou na sala!', 'ok');
+    if (salaAtual) {
+      const jogadores = [salaAtual.criador, ...(salaAtual.jogadores || [])];
+      renderJogadoresSala(jogadores);
+    }
+  });
+
+  _sock.on('batalha_iniciada', ({ nivel }) => {
+    iniciarJogoBatalha(nivel);
+  });
+
+  _sock.on('batalha_finalizada', ({ resultados }) => {
+    mostrarResultadoBatalha(resultados);
+  });
+
+  _sock.on('jogador_finalizou', ({ nome, tempo }) => {
+    toast(nome + ' terminou em ' + formatarTempo(tempo) + '!', 'inf');
+  });
+
+  _sock.on('adversario_desconectou', () => {
+    toast('Adversário desconectou!', 'err');
+    clearInterval(pollingInterval);
+    setTimeout(() => irParaBatalha(), 2000);
+  });
+
+  _sock.on('sala_cancelada', () => {
+    toast('Sala cancelada pelo criador', 'err');
+    irParaBatalha();
+  });
+
+  _sock.on('erro', ({ message }) => toast(message, 'err'));
+}
+
+function criarSala() {
+  if (!batalhaLevel) { toast('Selecione um nível primeiro!', 'err'); return; }
+  if (!jogadorId) { toast('Volte ao menu e entre novamente', 'err'); return; }
+  toast('Criando sala...', 'inf');
+  getOrCreateSocket(sock => {
+    sock.emit('criar_sala', {
+      jogador_id: jogadorId,
+      nome: jogador.nome,
+      avatar: jogador.avatar,
+      nivel: batalhaLevel
+    });
+  });
+}
+
+function entrarSala() {
   const codigo = document.getElementById('inp-codigo-sala').value.trim().toUpperCase();
   if (codigo.length < 5) { toast('Digite o código da sala', 'err'); return; }
   if (!jogadorId) { toast('Volte ao menu e entre novamente', 'err'); return; }
   toast('Entrando na sala...', 'inf');
-  try {
-    const r = await fetch(API_URL + '/api/batalha/entrar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        codigo,
-        jogador_id: jogadorId,
-        nome: jogador.nome,
-        avatar: jogador.avatar
-      })
+  getOrCreateSocket(sock => {
+    sock.emit('entrar_sala', {
+      codigo,
+      jogador_id: jogadorId,
+      nome: jogador.nome,
+      avatar: jogador.avatar
     });
-    const d = await r.json();
-    if (!r.ok) { toast(d.detail || 'Sala não encontrada', 'err'); return; }
-    salaAtual = d;
-    batalhaLevel = d.nivel;
-    document.getElementById('codigo-sala-display').textContent = d.codigo;
-    renderJogadoresSala(d.jogadores);
-    mostrarTela('screen-sala');
-    iniciarPolling(d.codigo);
-  } catch(e) { toast('Sem conexão com a API', 'err'); }
+  });
 }
 
 function renderJogadoresSala(jogadores) {
@@ -2103,16 +2159,9 @@ function iniciarPolling(codigo) {
   }, 2000);
 }
 
-async function iniciarBatalha() {
-  if (!salaAtual) return;
-  try {
-    const r = await fetch(API_URL + '/api/batalha/' + salaAtual.codigo + '/iniciar', {
-      method: 'POST'
-    });
-    const d = await r.json();
-    if (!r.ok) { toast(d.detail || 'Erro ao iniciar', 'err'); return; }
-    // Polling vai detectar status em_jogo e chamar iniciarJogoBatalha
-  } catch(e) { toast('Erro de conexão', 'err'); }
+function iniciarBatalha() {
+  if (!salaAtual || !_sock) return;
+  _sock.emit('iniciar_batalha');
 }
 
 function iniciarJogoBatalha(nivel) {
@@ -2240,6 +2289,7 @@ function copiarCodigo() {
 
 function sairDaSala() {
   clearInterval(pollingInterval);
+  if (_sock) _sock.emit('sair_sala');
   salaAtual = null;
   irParaBatalha();
 }
