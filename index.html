@@ -65,7 +65,12 @@
 }
 </script>
 <title>Tabuada Turbo ⚡ | Jogo de Tabuada Online com Ranking - Aprenda Multiplicação</title>
-<link href="https://fonts.googleapis.com/css2?family=Boogaloo&family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+<!-- Fontes não-bloqueantes — sem tela preta em aba anônima -->
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Boogaloo&family=Nunito:wght@400;600;700;900&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Boogaloo&family=Nunito:wght@400;600;700;900&display=swap"></noscript>
+<!-- Fontes sistema como fallback imediato -->
 <style>
   :root {
     --bg: #0f0e17;
@@ -1162,7 +1167,7 @@ const AVATARES = ['🦁','🐯','🐸','🦊','🐧','🦄','🐉','🤖','👾'
 const API_URL = 'https://backend-nept.onrender.com';
 let jogador = { nome: '', avatar: '🦁' };
 // jogadorId persistente — SEMPRE recuperar do localStorage para evitar duplicatas
-let jogadorId = localStorage.getItem('tt_jogador_id') || null;
+let jogadorId = (function(){ try { return localStorage.getItem('tt_jogador_id') || null; } catch { return null; } })();
 console.log('[INIT] jogadorId recuperado:', jogadorId ? jogadorId.substring(0,8)+'...' : 'novo jogador');
 let respostaAtual = '';
 let salaAtual = null;
@@ -1214,7 +1219,8 @@ function renderAvatares() {
 }
 
 function carregarJogador() {
-  const salvo = localStorage.getItem('tt_jogador');
+  let salvo = null;
+  try { salvo = localStorage.getItem('tt_jogador'); } catch { return; }
   if (salvo) {
     jogador = JSON.parse(salvo);
     document.getElementById('inp-nome').value = jogador.nome;
@@ -1654,8 +1660,10 @@ function confirmarDesistir() {
 //  RANKING
 // ══════════════════════════════════════════
 function getRanking(lv) {
-  const key = `tt_ranking_${lv}`;
-  return JSON.parse(localStorage.getItem(key) || '[]');
+  try {
+    const key = `tt_ranking_${lv}`;
+    return JSON.parse(localStorage.getItem(key) || '[]');
+  } catch { return []; }
 }
 
 function salvarRanking(entrada) {
@@ -1772,11 +1780,23 @@ function renderRankList(lv) {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      if (d.ranking && d.ranking.length > 0 && !d.offline) {
+      // SEMPRE substituir se API retornou dados globais (mesmo que local tenha dados)
+      if (d.ranking && d.ranking.length > 0) {
         renderRankItems(d.ranking.slice(0, 50), lv);
         processarFilaPendentes();
+      } else if (!d.offline) {
+        // API respondeu mas sem dados — mostrar mensagem de primeiro
+        const el = document.getElementById('rank-list');
+        el.innerHTML = '<div class="rank-empty">Nenhuma partida ainda.<br>🚀 Seja o primeiro!</div>';
       }
-      // Se offline:true ou vazio — mantém o local já exibido
+      // Se d.offline = true — mantém o local já exibido
+      if (d.offline) {
+        const aviso = document.createElement('div');
+        aviso.style.cssText = 'text-align:center;font-size:0.7rem;color:var(--muted);padding:4px 0 8px';
+        aviso.textContent = '📱 Dados do seu dispositivo — servidor reconectando...';
+        const el2 = document.getElementById('rank-list');
+        if (el2) el2.insertBefore(aviso, el2.firstChild);
+      }
     })
     .catch(err => {
       if (settled) return;
@@ -1800,6 +1820,17 @@ function renderRankLocal(lv) {
 
 function renderRankItems(items, lv) {
   const el = document.getElementById('rank-list');
+  if (!items || items.length === 0) {
+    el.innerHTML = '<div class="rank-empty">Nenhum resultado ainda.<br>Seja o primeiro! 🚀</div>';
+    return;
+  }
+  // Deduplicar no frontend também: melhor tempo por nome+nivel
+  const seen = new Map();
+  for (const r of items) {
+    const k = (r.nome||'').toLowerCase() + '_' + (r.nivel||lv);
+    if (!seen.has(k) || r.tempo < seen.get(k).tempo) seen.set(k, r);
+  }
+  items = [...seen.values()].sort((a,b) => a.tempo - b.tempo);
   if (!items || items.length === 0) {
     el.innerHTML = '<div class="rank-empty">Nenhum resultado ainda.<br>Seja o primeiro! 🚀</div>';
     return;
