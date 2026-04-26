@@ -1759,58 +1759,48 @@ function switchTab(lv) {
 }
 
 function renderRankList(lv) {
-  const el = document.getElementById('rank-list');
-
-  // Mostrar dados locais IMEDIATAMENTE — nunca tela vazia
+  // 1. Mostrar local IMEDIATAMENTE — nunca tela vazia
   renderRankLocal(lv);
 
-  // Tentar buscar global em paralelo (timeout 8s)
+  const syncEl = document.getElementById('rank-sync-status');
+  if (syncEl) syncEl.textContent = '🌐 Sincronizando...';
+
   let endpoint = '/api/ranking/global';
   if (lv === 1) endpoint = '/api/ranking/global?nivel=1';
   else if (lv === 2) endpoint = '/api/ranking/global?nivel=2';
 
-  // Mostrar indicador de sincronização
-  const syncEl = document.getElementById('rank-sync-status');
-  if (syncEl) syncEl.textContent = '🌐 Sincronizando...';
-
-  let settled = false;
+  // 2. AbortController manual — compatível com todos os browsers mobile
+  const ctrl = new AbortController();
   const timer = setTimeout(() => {
-    if (settled) return;
-    settled = true;
-    if (syncEl) syncEl.textContent = '📱 Dados locais (servidor acordando...)';
-    console.warn('[RANKING] Timeout — mantendo dados locais');
+    ctrl.abort();
+    if (syncEl) syncEl.textContent = '📱 Dados locais · servidor acordando...';
   }, 25000);
 
-  fetch(API_URL + endpoint, { signal: AbortSignal.timeout(25000) })
-    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(d => {
-      if (settled) return;
-      settled = true;
+  fetch(API_URL + endpoint, { signal: ctrl.signal })
+    .then(r => {
       clearTimeout(timer);
-      // SEMPRE substituir se API retornou dados globais (mesmo que local tenha dados)
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(d => {
+      if (!d || d.offline) {
+        if (syncEl) syncEl.textContent = '📱 Dados locais · servidor offline';
+        return;
+      }
+      // 3. Substituir sempre com dados globais quando chegarem
       if (d.ranking && d.ranking.length > 0) {
         renderRankItems(d.ranking.slice(0, 50), lv);
         if (syncEl) syncEl.textContent = '✅ Ranking global · ' + d.total + ' jogadores';
         processarFilaPendentes();
-      } else if (!d.offline) {
-        // API respondeu mas sem dados — mostrar mensagem de primeiro
-        const el = document.getElementById('rank-list');
-        el.innerHTML = '<div class="rank-empty">Nenhuma partida ainda.<br>🚀 Seja o primeiro!</div>';
-      }
-      // Se d.offline = true — mantém o local já exibido
-      if (d.offline) {
-        const aviso = document.createElement('div');
-        aviso.style.cssText = 'text-align:center;font-size:0.7rem;color:var(--muted);padding:4px 0 8px';
-        aviso.textContent = '📱 Dados do seu dispositivo — servidor reconectando...';
-        const el2 = document.getElementById('rank-list');
-        if (el2) el2.insertBefore(aviso, el2.firstChild);
+      } else {
+        const elr = document.getElementById('rank-list');
+        if (elr) elr.innerHTML = '<div class="rank-empty">Nenhuma partida ainda.<br>🚀 Seja o primeiro!</div>';
+        if (syncEl) syncEl.textContent = '✅ Conectado · sem partidas ainda';
       }
     })
-    .catch(err => {
-      if (settled) return;
-      settled = true;
+    .catch(() => {
       clearTimeout(timer);
-      console.warn('[RANKING] API indisponível — dados locais ativos');
+      if (syncEl) syncEl.textContent = '📱 Dados locais · sem conexão';
     });
 }
 
