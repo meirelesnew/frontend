@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://tabuadaturbo.com.br/sitemap.xml
+
+# Bloquear arquivos desnecessários
+Disallow: /js/
+Disallow: /css/
+Disallow: /sw.js
