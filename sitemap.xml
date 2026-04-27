@@ -6,6 +6,11 @@
     <lastmod>2026-04-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://tabuadaturbo.com.br/"/>
+  </url>
+  <url>
+    <loc>https://tabuadaturbo.com.br/dicas.html</loc>
+    <lastmod>2026-04-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
 </urlset>
