@@ -916,6 +916,115 @@
     .mult-table th, .mult-table td { width: 36px; height: 36px; font-size: 0.72rem; }
     .mult-table th { font-size: 0.85rem; }
   }
+
+/* ══════════════════════════════════════════
+   AGENTE DE PRESENÇA ONLINE + RECORDES
+══════════════════════════════════════════ */
+#agente-container {
+  position: fixed;
+  bottom: 20px;
+  right: 16px;
+  z-index: 8000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: none;
+}
+
+/* Bolha de online */
+#agente-online {
+  background: rgba(15,14,23,0.92);
+  border: 1px solid rgba(57,255,20,0.3);
+  border-radius: 20px;
+  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.78rem;
+  color: var(--text);
+  pointer-events: all;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: all .2s;
+}
+#agente-online:hover { border-color: var(--green); }
+.online-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  animation: pulseGreen 1.5s ease-in-out infinite;
+}
+@keyframes pulseGreen {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: .5; transform: scale(.8); }
+}
+
+/* Painel expandido */
+#agente-painel {
+  background: rgba(15,14,23,0.95);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 14px;
+  width: 220px;
+  display: none;
+  pointer-events: all;
+  backdrop-filter: blur(12px);
+}
+#agente-painel.aberto { display: block; }
+.agente-titulo {
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.agente-jogador {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: .5px solid rgba(255,255,255,0.05);
+  font-size: .82rem;
+}
+.agente-jogador:last-child { border: none; }
+.agente-av { font-size: 1.1rem; }
+.agente-nome { flex: 1; color: var(--text); font-weight: 600; }
+.agente-status {
+  font-size: .65rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+.st-jogando { background: rgba(255,107,53,.2); color: var(--accent); }
+.st-menu    { background: rgba(167,169,190,.1); color: var(--muted); }
+.st-sala    { background: rgba(0,229,255,.15); color: var(--accent3); }
+
+/* Toast de recorde */
+.recorde-toast {
+  background: linear-gradient(135deg, rgba(255,215,0,.15), rgba(255,107,53,.1));
+  border: 1px solid rgba(255,215,0,.4);
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-size: .82rem;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  animation: slideInRight .4s ease, fadeOut .4s ease 4.5s forwards;
+  max-width: 240px;
+}
+@keyframes slideInRight {
+  from { transform: translateX(60px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes fadeOut {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-10px); }
+}
+
 </style>
 </head>
 <body>
@@ -1359,6 +1468,7 @@ function shuffle(arr) {
 
 function iniciarJogo(lv) {
   nivelAtualJogo = lv;
+  _agenteSetStatus('jogando');
   nivel = lv;
   acertos = 0;
   erros = 0;
@@ -1610,6 +1720,7 @@ function formatarTempo(s) {
 function finalizarJogo() {
   jogoAtivo = false;
   clearInterval(timerInterval);
+  _agenteSetStatus('menu');
   pararMusica();
 
   const entrada = {
@@ -2676,19 +2787,31 @@ function toast(msg, tipo) {
 }
 </script>
 <!-- ✅ GA4 e AdSense no final — não bloqueiam FCP nem LCP -->
+<!-- ════ AGENTE DE PRESENÇA ONLINE ════ -->
+<div id="agente-container">
+  <div id="agente-painel">
+    <div class="agente-titulo">🟢 Online agora</div>
+    <div id="agente-lista"><div style="color:var(--muted);font-size:.75rem;text-align:center;padding:8px">Conectando...</div></div>
+  </div>
+  <div id="agente-online" onclick="togglePainel()" title="Ver jogadores online">
+    <div class="online-dot"></div>
+    <span id="agente-count">0 online</span>
+  </div>
+</div>
+
 <script>
   // Carregar GA4 e AdSense após interação ou 3s — zero impacto no LCP
   function loadThirdParty() {
     // GA4
     var ga = document.createElement('script');
     ga.async = true;
-    ga.src = 'https://www.googletagmanager.com/gtag/js?id=G-531494859';
+    ga.src = 'https://www.googletagmanager.com/gtag/js?id=G-534329983';
     document.head.appendChild(ga);
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     window.gtag = gtag;
     gtag('js', new Date());
-    gtag('config', 'G-531494859', {send_page_view: false});
+    gtag('config', 'G-534329983', {send_page_view: false});
     setTimeout(() => gtag('event', 'page_view'), 1000);
     // AdSense
     var ads = document.createElement('script');
@@ -2703,6 +2826,125 @@ function toast(msg, tipo) {
   } else {
     window.addEventListener('load', () => setTimeout(loadThirdParty, 2000));
   }
+
+// ══════════════════════════════════════════════════════
+//  AGENTE DE PRESENÇA ONLINE + NOTIFICAÇÃO DE RECORDES
+// ══════════════════════════════════════════════════════
+let _agenteSocket   = null;
+let _painelAberto   = false;
+let _reconectTimer  = null;
+
+function togglePainel() {
+  _painelAberto = !_painelAberto;
+  const p = document.getElementById('agente-painel');
+  if (p) p.classList.toggle('aberto', _painelAberto);
+}
+
+function agenteConectar() {
+  // Carregar socket.io se ainda não estiver
+  if (typeof io === 'undefined') {
+    const s   = document.createElement('script');
+    s.src     = 'https://cdn.socket.io/4.7.5/socket.io.min.js';
+    s.onload  = () => _agenteIniciar();
+    s.onerror = () => console.warn('[AGENTE] socket.io não carregou');
+    document.head.appendChild(s);
+  } else {
+    _agenteIniciar();
+  }
+}
+
+function _agenteIniciar() {
+  const base = 'https://backend-nept.onrender.com';
+  _agenteSocket = io(base, {
+    transports:   ['websocket', 'polling'],
+    reconnection: true,
+    reconnectionDelay: 3000
+  });
+
+  _agenteSocket.on('connect', () => {
+    console.log('[AGENTE] conectado');
+    // Registrar presença online com dados do jogador atual
+    if (typeof jogador !== 'undefined' && jogador.nome) {
+      _agenteSocket.emit('entrar_online', {
+        nome:   jogador.nome,
+        avatar: jogador.avatar || '🦁',
+        status: 'menu'
+      });
+    }
+  });
+
+  _agenteSocket.on('online_atualizado', ({ total, jogadores }) => {
+    const countEl = document.getElementById('agente-count');
+    if (countEl) countEl.textContent = total + ' online';
+
+    const listaEl = document.getElementById('agente-lista');
+    if (!listaEl) return;
+
+    if (!jogadores || jogadores.length === 0) {
+      listaEl.innerHTML = '<div style="color:var(--muted);font-size:.75rem;text-align:center;padding:8px">Nenhum jogador online</div>';
+      return;
+    }
+
+    const statusLabel = { jogando:'Jogando', menu:'No menu', sala:'Na sala' };
+    const statusClass = { jogando:'st-jogando', menu:'st-menu', sala:'st-sala' };
+
+    listaEl.innerHTML = jogadores.slice(0, 8).map(j => `
+      <div class="agente-jogador">
+        <span class="agente-av">${j.avatar || '🦁'}</span>
+        <span class="agente-nome">${j.nome || 'Jogador'}</span>
+        <span class="agente-status ${statusClass[j.status] || 'st-menu'}">
+          ${statusLabel[j.status] || 'Menu'}
+        </span>
+      </div>`).join('');
+  });
+
+  _agenteSocket.on('recorde_quebrado', ({ nome, avatar, nivel, tempo, quando }) => {
+    const min = String(Math.floor(tempo / 60)).padStart(2,'0');
+    const sec = String(tempo % 60).padStart(2,'0');
+    mostrarToastRecorde(
+      `${avatar || '🏆'} <strong>${nome}</strong> quebrou o recorde!`,
+      `Nível ${nivel} em ${min}:${sec}`
+    );
+  });
+
+  _agenteSocket.on('disconnect', () => {
+    const countEl = document.getElementById('agente-count');
+    if (countEl) countEl.textContent = '0 online';
+  });
+}
+
+function mostrarToastRecorde(titulo, sub) {
+  const container = document.getElementById('agente-container');
+  if (!container) return;
+  const el = document.createElement('div');
+  el.className = 'recorde-toast';
+  el.innerHTML = `<span style="font-size:1.2rem">🏆</span><div><div>${titulo}</div><div style="font-size:.72rem;color:var(--muted);margin-top:2px">${sub}</div></div>`;
+  container.insertBefore(el, container.firstChild);
+  setTimeout(() => el.remove(), 5000);
+}
+
+// Atualizar status quando começar a jogar
+function _agenteSetStatus(status) {
+  if (_agenteSocket && _agenteSocket.connected) {
+    _agenteSocket.emit('atualizar_status', { status });
+  }
+}
+
+// Enviar evento de recorde quebrado quando bater o melhor tempo
+function _agenteNovoRecorde(nivel, tempo) {
+  if (_agenteSocket && _agenteSocket.connected && typeof jogador !== 'undefined') {
+    _agenteSocket.emit('novo_recorde', {
+      nome:   jogador.nome,
+      avatar: jogador.avatar || '🦁',
+      nivel,
+      tempo
+    });
+  }
+}
+
+// Iniciar o agente 3s após o load (não bloqueia nada)
+window.addEventListener('load', () => setTimeout(agenteConectar, 3000));
+
 </script>
 </body>
 </html>
