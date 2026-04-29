@@ -2854,6 +2854,7 @@ function agenteConectar() {
 }
 
 function _agenteIniciar() {
+  try {
   const base = 'https://backend-nept.onrender.com';
   _agenteSocket = io(base, {
     transports:   ['websocket', 'polling'],
@@ -2911,6 +2912,7 @@ function _agenteIniciar() {
     const countEl = document.getElementById('agente-count');
     if (countEl) countEl.textContent = '0 online';
   });
+  } catch(e) { console.warn('[AGENTE] erro na inicialização:', e.message); }
 }
 
 function mostrarToastRecorde(titulo, sub) {
@@ -2942,8 +2944,10 @@ function _agenteNovoRecorde(nivel, tempo) {
   }
 }
 
-// Iniciar o agente 3s após o load (não bloqueia nada)
-window.addEventListener('load', () => setTimeout(agenteConectar, 3000));
+// Iniciar o agente 4s após o load — com proteção total
+window.addEventListener('load', () => setTimeout(() => {
+  try { agenteConectar(); } catch(e) { console.warn('[AGENTE] falhou silenciosamente:', e.message); }
+}, 4000));
 
 </script>
 </body>
